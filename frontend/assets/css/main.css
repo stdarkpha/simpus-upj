@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;400;500;600;700;800;900&display=swap");
+
+@import "tailwindcss";
+@theme {
+   --color-primary-1: #f9bd9e;
+   --color-primary-2: #ad7e65;
+   --color-secondary-1: #6c3427;
+   --color-secondary-2: #a37348;
+   --color-secondary-3: #1b1c4b;
+   --color-secondary-4: #30241a;
+   --default-transition-duration: 0.5s;
+}
+
+@plugin 'tailwind-scrollbar' {
+   nocompatible: true;
+   preferredstrategy: "pseudoelements";
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+   * {
+      font-family: "Nunito Sans", sans-serif;
+   }
+
+   html,
+   body {
+      @apply text-neutral-600 w-full scroll-smooth;
+   }
+
+   h1,
+   h2,
+   h3,
+   h4,
+   h5,
+   h6 {
+      @apply font-semibold;
+      color: #30241a;
+   }
+
+   .scrollbar-thin {
+      scrollbar-color: unset;
+      scrollbar-width: unset;
+   }
+
+   .container {
+      @apply px-8;
+   }
+}
