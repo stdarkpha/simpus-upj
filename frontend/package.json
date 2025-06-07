@@ -19,6 +19,8 @@
   },
   "packageManager": "pnpm@9.14.2+sha256.06e65a4965baff6d6097f9c8f75c35f6d420974dbc03d775009056a69edfd271",
   "devDependencies": {
-    "@iconify/vue": "^5.0.0"
+    "@iconify/vue": "^5.0.0",
+    "nuxt-auth-sanctum": "^0.6.7",
+    "nuxt-swiper": "^2.0.1"
   }
 }

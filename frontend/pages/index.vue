@@ -1,5 +1,5 @@
 <template>
-   <div></div>
+   <div>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dicta magnam explicabo dolores provident fugit dolore aperiam perferendis incidunt debitis accusantium recusandae reprehenderit asperiores, laboriosam minus? Eius, quaerat at! Excepturi, beatae!</div>
 </template>
 
 <script lang="ts" setup>
