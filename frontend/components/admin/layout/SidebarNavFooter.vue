@@ -15,9 +15,10 @@ defineProps<{
 }>();
 
 const { isMobile } = useSidebar();
+const { signOut } = useAuth();
 
 const logoutUser = async () => {
-   await useSanctumAuth().logout();
+   await signOut({ callbackUrl: "/admin/login" });
 };
 
 const showModalTheme = ref(false);

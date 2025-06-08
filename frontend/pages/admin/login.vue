@@ -5,6 +5,7 @@ import UserAuthForm from "@/components/admin/login/formlogin.vue";
 
 definePageMeta({
    layout: "blank",
+   middleware: ["guest"],
 });
 </script>
 

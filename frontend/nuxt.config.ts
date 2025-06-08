@@ -16,37 +16,38 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   modules: [
     'nuxt-swiper',
-    'nuxt-auth-sanctum',
     'shadcn-nuxt',
     '@nuxtjs/color-mode',
+    '@sidebase/nuxt-auth',
   ],
   colorMode: {
     classSuffix: '',
     preference: 'system',
     fallback: 'light',
-    storage: 'localStorage', // or 'sessionStorage' or 'cookie'
+    storage: 'localStorage',
     storageKey: 'nuxt-color-mode'
   },
   shadcn: {
-    /**
-     * Prefix for all the imported component
-     */
     prefix: '',
-    /**
-     * Directory that the component lives in.
-     * @default "./components/ui"
-     */
     componentDir: './components/ui'
   },
 
-  sanctum: {
-    baseUrl: process.env.API_URL, // Laravel API
-    mode: 'token',
-    endpoints: {
-      user: 'user',
-      login: 'login',
-      logout: 'user/logout',
+  auth: {
+    baseURL: process.env.API_URL || 'http://localhost:8000',
+    provider: {
+      type: 'local',
+      endpoints: {
+        signIn: { path: '/api/login', method: 'post' },
+        signOut: { path: '/api/user/logout', method: 'post' },
+        getSession: { path: '/api/user', method: 'get' }
+      },
+      token: {
+        signInResponseTokenPointer: '/data/token',
+        type: 'Bearer',
+        headerName: 'Authorization'
+      }
     },
+    globalAppMiddleware: false
   },
 
   vite: {

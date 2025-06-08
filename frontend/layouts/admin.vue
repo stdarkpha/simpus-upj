@@ -2,8 +2,6 @@
 import AppSidebar from "@/components/admin/AppSidebar.vue";
 import Header from "@/components/admin/layout/Header.vue";
 import { SidebarProvider } from "@/components/ui/sidebar";
-
-import { toast } from "vue-sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Icon } from "@iconify/vue";
@@ -13,19 +11,19 @@ const colorMode = useColorMode();
 console.log(colorMode.value);
 
 if (colorMode.value === "dark") {
-   document.body.classList.add("!scrollbar-thumb-slate-600");
-   document.body.classList.add("!scrollbar-track-slate-900");
+   document.body.classList.add("!scrollbar-thumb-zinc-600");
+   document.body.classList.add("!scrollbar-track-zinc-900");
 }
 
 watch(
    () => colorMode.value,
    (val) => {
       if (val === "dark") {
-         document.body.classList.add("!scrollbar-thumb-slate-600");
-         document.body.classList.add("!scrollbar-track-slate-900");
+         document.body.classList.add("!scrollbar-thumb-zinc-600");
+         document.body.classList.add("!scrollbar-track-zinc-900");
       } else {
-         document.body.classList.remove("!scrollbar-thumb-slate-600");
-         document.body.classList.remove("!scrollbar-track-slate-900");
+         document.body.classList.remove("!scrollbar-thumb-zinc-600");
+         document.body.classList.remove("!scrollbar-track-zinc-900");
       }
    }
 );

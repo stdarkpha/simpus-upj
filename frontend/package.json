@@ -17,6 +17,7 @@
     "@unovis/vue": "^1.5.2",
     "@vee-validate/zod": "^4.15.1",
     "@vueuse/core": "^13.3.0",
+    "@vueuse/math": "^13.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -39,7 +40,7 @@
   "devDependencies": {
     "@iconify/vue": "^5.0.0",
     "@nuxtjs/color-mode": "^3.5.2",
-    "nuxt-auth-sanctum": "^0.6.7",
+    "@sidebase/nuxt-auth": "^0.10.1",
     "nuxt-swiper": "^2.0.1"
   }
 }

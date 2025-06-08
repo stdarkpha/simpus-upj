@@ -72,9 +72,25 @@
 <script lang="ts" setup>
 definePageMeta({
    layout: "admin",
+   middleware: ["admin"], // Use the new admin-auth middleware
 });
 
 import { Icon } from "@iconify/vue";
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
+const { data } = useAuth();
+onMounted(() => {
+   if (loggedIn.value) {
+      //@ts-ignore
+      toast(`Welcome, ${data.value?.data?.name}`, {
+         theme: "auto",
+         type: "success",
+         pauseOnHover: false,
+      });
+
+      loggedIn.value = false;
+   }
+});
 
 // const store = useAdminStore();
 

@@ -235,16 +235,21 @@ class UserController extends Controller
         ]);
 
         if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials'
+            ], 401);
         }
 
         $user = Auth::user();
         $tokenName = $request->input('token_name', 'auth_token');
         $token = $request->user()->createToken($tokenName);
+        $user->token = $token->plainTextToken;
 
         return response()->json([
-            'user' => $user,
-            'token' => $token->plainTextToken,
+            'success' => true,
+            'message' => 'Login successful',
+            'data' => $user,
         ]);
     }
 
