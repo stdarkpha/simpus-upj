@@ -1,0 +1,74 @@
+<script setup lang="ts">
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "vue-sonner";
+
+const props = defineProps<{
+   edit: string;
+   delete: string;
+   fetch?: Function;
+}>();
+import { Icon } from "@iconify/vue";
+import { Button } from "~/components/ui/button";
+
+const client = useSanctumClient();
+
+const deleteItems = async () => {
+   await client(`${props.delete}`, {
+      headers: {
+         "Content-Type": "application/json",
+         Accept: "application/json",
+      },
+      method: "DELETE",
+   }).then((response: any) => {
+      toast({
+         title: "Deleted",
+         description: response.message,
+      });
+
+      if (props.fetch) {
+         props.fetch();
+      }
+   });
+};
+
+const open = ref(false);
+</script>
+
+<template>
+   <AlertDialog v-model:open="open">
+      <AlertDialogContent>
+         <AlertDialogHeader>
+            <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+            <AlertDialogDescription> Are you sure you want to delete this item? </AlertDialogDescription>
+         </AlertDialogHeader>
+         <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction @click="deleteItems">Continue</AlertDialogAction>
+         </AlertDialogFooter>
+      </AlertDialogContent>
+   </AlertDialog>
+   <DropdownMenu>
+      <DropdownMenuTrigger>
+         <Button variant="ghost" size="sm">
+            <Icon icon="tabler:dots" />
+         </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+         <DropdownMenuLabel>Action</DropdownMenuLabel>
+         <DropdownMenuSeparator />
+         <NuxtLink :to="edit">
+            <DropdownMenuItem>
+               Edit
+               <Icon icon="lucide:edit" class="ml-auto" />
+            </DropdownMenuItem>
+         </NuxtLink>
+
+         <DropdownMenuItem @click="open = true">
+            Delete
+            <Icon icon="mi:delete" class="ml-auto" />
+         </DropdownMenuItem>
+      </DropdownMenuContent>
+   </DropdownMenu>
+</template>
