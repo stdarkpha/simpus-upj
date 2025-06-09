@@ -11,26 +11,28 @@ const props = defineProps<{
 }>();
 import { Icon } from "@iconify/vue";
 import { Button } from "~/components/ui/button";
-
-const client = useSanctumClient();
+const { token } = useAuth();
+// const client = useSanctumClient();
 
 const deleteItems = async () => {
-   await client(`${props.delete}`, {
+   await $fetch(`${props.delete}`, {
       headers: {
-         "Content-Type": "application/json",
+         Authorization: `Bearer ${token.value}`,
          Accept: "application/json",
       },
       method: "DELETE",
-   }).then((response: any) => {
-      toast({
-         title: "Deleted",
-         description: response.message,
-      });
-
-      if (props.fetch) {
-         props.fetch();
-      }
-   });
+      onResponse({ response }) {
+         if (response._data.success) {
+            toast.success("Item deleted successfully");
+            open.value = false;
+            if (props.fetch) {
+               props.fetch();
+            }
+         } else {
+            toast.error(response._data.message || "Failed to delete item");
+         }
+      },
+   })
 };
 
 const open = ref(false);

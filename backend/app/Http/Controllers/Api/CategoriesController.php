@@ -27,6 +27,24 @@ class CategoriesController extends Controller
         ]);
     }
 
+    // by id
+    public function show($id)
+    {
+        // get category by id
+        $category = Categories::find($id);
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Category not found',
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => $category,
+            'message' => 'Category retrieved successfully',
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      */

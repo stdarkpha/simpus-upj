@@ -26,7 +26,7 @@ const openCollapsible = ref(false)
               class="rounded-md bg-#adfa1d px-1.5 py-0.5 text-xs text-black leading-none no-underline group-hover:no-underline">
               New
             </span>
-            <Icon name="i-lucide-chevron-right"
+            <Icon icon="lucide-chevron-right"
               class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>

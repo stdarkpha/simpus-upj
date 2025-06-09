@@ -1,6 +1,5 @@
 const { signIn, data } = useAuth();
-import { toast } from "vue3-toastify";
-import "vue3-toastify/dist/index.css";
+import { toast } from "vue-sonner";
 
 export const isLoggin = ref(false);
 export const loggedIn = ref(false);
@@ -17,18 +16,13 @@ export const userLogin = async (email: string, password: string) => {
         //@ts-ignore
         if (data.value?.data?.role == "admin") {
             isLoggin.value = false;
+            toast.success("Login successful" + data.value?.data?.name);
             return useRouter().push("/admin");
         }
         isLoggin.value = false;
         return useRouter().push("/app/dashboard");
     } catch (err: any) {
-        toast(
-            "Login failed. Please check your credentials.",
-            {
-                "theme": "auto",
-                "type": "error",
-                "pauseOnHover": false
-            });
+        toast.error("login failed, please check your credentials");
         console.error(err);
         isLoggin.value = false;
     }

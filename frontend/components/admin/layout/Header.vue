@@ -9,18 +9,21 @@ function setLinks() {
   if (path.startsWith('/admin')) {
     path = path.replace('/admin', '')
   }
-  return path.split('/').map((item, index) => {
-    const str = item.replace(/-/g, ' ')
+  const segments = path.split('/').filter(Boolean);
+  let accumulated = '/admin';
+  return [{ title: 'Admin', href: '/admin' }, ...segments.map((item, index) => {
+    accumulated += `/${item}`;
+    const str = item.replace(/-/g, ' ');
     const title = str
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ')
+      .join(' ');
 
     return {
-      title: index > 0 ? title : 'Admin',
-      href: index > 0 ? `/admin/${item}` : '/admin',
-    }
-  })
+      title,
+      href: accumulated,
+    };
+  })];
 }
 
 const links = ref<{

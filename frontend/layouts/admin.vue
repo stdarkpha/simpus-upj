@@ -8,8 +8,6 @@ import { Icon } from "@iconify/vue";
 
 const colorMode = useColorMode();
 
-console.log(colorMode.value);
-
 if (colorMode.value === "dark") {
    document.body.classList.add("!scrollbar-thumb-zinc-600");
    document.body.classList.add("!scrollbar-track-zinc-900");
@@ -28,19 +26,14 @@ watch(
    }
 );
 
-// const { setLocale, locale } = useI18n();
-
-// watch(
-//    () => locale.value,
-//    () => {
-//       window.location.reload();
-//    }
-// );
+import { Toaster } from '@/components/ui/sonner'
+import 'vue-sonner/style.css'
 </script>
 
 <template>
    <div>
-      <Toaster :duration="2000" />
+      <!-- Layout admin -->
+      <Toaster style="" rich-colors />
       <SidebarProvider>
          <AppSidebar />
          <div class="flex flex-col fixed sm:hidden bottom-0 right-0 m-4 gap-2 z-50">
@@ -59,8 +52,10 @@ watch(
             <DropdownMenu>
                <DropdownMenuTrigger as-child>
                   <Button variant="outline">
-                     <Icon icon="radix-icons:moon" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                     <Icon icon="radix-icons:sun" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                     <Icon icon="radix-icons:moon"
+                        class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                     <Icon icon="radix-icons:sun"
+                        class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                      <span class="sr-only">Toggle theme</span>
                   </Button>
                </DropdownMenuTrigger>
@@ -94,8 +89,10 @@ watch(
                   <DropdownMenu>
                      <DropdownMenuTrigger as-child>
                         <Button variant="outline">
-                           <Icon icon="radix-icons:moon" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                           <Icon icon="radix-icons:sun" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                           <Icon icon="radix-icons:moon"
+                              class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                           <Icon icon="radix-icons:sun"
+                              class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                            <span class="sr-only">Toggle theme</span>
                         </Button>
                      </DropdownMenuTrigger>

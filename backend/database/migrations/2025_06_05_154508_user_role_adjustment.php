@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('role')->default('user')->after('email');
             // add nim with nullable
-            $table->string('nim')->nullable()->after('role');
+            $table->string('uid')->nullable()->after('role');
             // profile picture
-            $table->string('img')->nullable()->after('nim');
+            $table->string('img')->nullable()->after('uid');
         });
     }
 
@@ -26,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['role', 'nim', 'img']);
+            $table->dropColumn(['role', 'uid', 'img']);
         });
     }
 };

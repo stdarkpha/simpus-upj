@@ -1,9 +1,13 @@
 <template>
-   <form class="space-y-6 max-w-2xl" @submit.prevent="submitForm">
-      <Separator class="my-6" />
+   <form class="space-y-6 px-4 pb-8 scrollbar-thin max-w-2xl overflow-auto" @submit.prevent="submitForm">
+
       <div class="grid w-full items-center gap-3.5">
          <Label for="name">Name</Label>
-         <Input id="name" v-model="name" type="text" placeholder="Name" />
+         <Input id="name" v-model="name" type="text" placeholder="name" />
+      </div>
+      <div v-if="role != 'admin'" class="grid w-full items-center gap-3.5">
+         <Label for="uid">{{ role == 'dosen' ? 'NIDN' : 'NIM' }}</Label>
+         <Input id="uid" v-model="uid" type="uid" placeholder="uid" />
       </div>
       <div class="grid w-full items-center gap-3.5">
          <Label for="email">Email</Label>
@@ -11,18 +15,7 @@
       </div>
       <div class="grid w-full items-center gap-3.5">
          <Label for="role">Role</Label>
-         <Select id="role" v-model="category">
-            <SelectTrigger>
-               <SelectValue placeholder="select user role" />
-            </SelectTrigger>
-            <SelectContent>
-               <template v-for="category in props.category_data" :key="category.id">
-                  <SelectItem class="capitalize" v-if="category.name != 'root'" :value="category.id">
-                     {{ category.name }}
-                  </SelectItem>
-               </template>
-            </SelectContent>
-         </Select>
+         <Input id="role" v-model="role" type="text" disabled placeholder="role" />
       </div>
       <div class="grid w-full items-center gap-3.5">
          <Label for="password">Password</Label>
@@ -32,85 +25,89 @@
          <Label for="confirm">Confirm Password</Label>
          <Input id="confirm" v-model="confirm_password" type="password" placeholder="confirm password" />
       </div>
-      <Button type="submit"> Submit </Button>
+      <Button type="submit" class="flex items-center gap-2 w-full">
+         <Icon icon="mdi:loading" class="animate-spin" v-if="loading" />
+         {{ loading ? "Loading..." : props.id ? "Update User" : "Add User" }}
+      </Button>
    </form>
 </template>
 
 <script setup lang="ts">
+import { Icon } from "@iconify/vue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "vue-sonner";
 
 const props = defineProps<{
-   category_data: any;
    id?: number;
 }>();
 
+const loading = ref(false);
 const emit = defineEmits();
 const name = ref("");
 const email = ref("");
 const password = ref("");
 const confirm_password = ref("");
-const category = ref<number | null>(null);
-const client = useSanctumClient();
+const role = ref("dosen");
+const uid = ref("");
+
+const { token } = useAuth()
+const config = useRuntimeConfig();
 
 const submitForm = async () => {
+   loading.value = true;
    const formData = {
-      id: props.id ? props.id.toString() : undefined,
-      role_id: category.value,
+      id: props.id ? props.id : null,
+      role: role.value,
       name: name.value,
+      uid: uid.value,
       email: email.value,
       password: password.value,
       password_confirmation: confirm_password.value,
    };
 
-   await client("user/add", {
+   await $fetch(`${config.public.API_URL}user/store`, {
+      headers: {
+         Authorization: `Bearer ${token.value}`,
+         "Accept": "application/json",
+      },
       method: "POST",
       body: formData,
       onResponse({ response }) {
-         if (response._data.message) {
+         if (response._data.success) {
+            toast.success('Success Saving User');
+            loading.value = false;
             emit("refresh");
-            toast({
-               title: "Success",
-               description: response._data.message,
-            });
             useAdminStore().fetchUserData();
+         } else {
+            loading.value = false;
+            const errors = response._data.errors;
+            // toast.error(errors);
+            errors.map((error: any) => {
+               toast.error(error);
+            });
          }
       },
-      onResponseError({ response }) {
-         Object.keys(response._data.errors).forEach((key) => {
-            response._data.errors[key].forEach(async (error: any) => {
-               toast({
-                  title: "Error",
-                  description: error,
-                  variant: "destructive",
-               });
-            });
-         });
-      },
-   });
+   })
+
 };
 
 if (props.id) {
-   client(`user/${props.id}`, {
-      onResponse({ response }) {
-         // Map Data
-         const data = response._data.data;
-         if (!data) {
-            emit("refresh");
-            toast({
-               title: "Error",
-               description: "Client not found",
-               variant: "destructive",
-            });
-         }
-         console.log("Data", data);
+   const data: any = await useAdminStore().fetchUserDetails(props.id);
+   // console.log("User Data", data);
 
-         // set form data
-         name.value = data.name;
-         email.value = data.email;
-         category.value = data.role_id;
-      },
-   });
+   if (data.success) {
+      name.value = data.data.name;
+      email.value = data.data.email;
+      role.value = data.data.role;
+      uid.value = data.data.uid;
+   } else {
+      emit("refresh");
+      toast({
+         title: "Error",
+         description: "Client not found",
+         variant: "destructive",
+      });
+   }
 }
 </script>

@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     public: {
       BASE_URL: process.env.BASE_URL,
       API_URL: process.env.API_URL,
-      API_BASE: process.env.API_BASE,
+      API_BASE_URL: process.env.API_BASE_URL,
     }
   },
 
@@ -19,6 +19,7 @@ export default defineNuxtConfig({
     'shadcn-nuxt',
     '@nuxtjs/color-mode',
     '@sidebase/nuxt-auth',
+    '@pinia/nuxt',
   ],
   colorMode: {
     classSuffix: '',
@@ -33,13 +34,27 @@ export default defineNuxtConfig({
   },
 
   auth: {
-    baseURL: process.env.API_URL || 'http://localhost:8000',
+    baseURL: process.env.API_URL,
     provider: {
       type: 'local',
+      session: {
+        dataType: {
+          success: 'boolean',
+          data: {
+            id: 'number',
+            name: 'string',
+            email: 'string',
+            role: 'string',
+            uid: 'string',
+            img: 'string | null',
+            token: 'string'
+          },
+        },
+      },
       endpoints: {
-        signIn: { path: '/api/login', method: 'post' },
-        signOut: { path: '/api/user/logout', method: 'post' },
-        getSession: { path: '/api/user', method: 'get' }
+        signIn: { path: 'user/login', method: 'post' },
+        signOut: { path: 'user/logout', method: 'post' },
+        getSession: { path: 'user', method: 'get' }
       },
       token: {
         signInResponseTokenPointer: '/data/token',

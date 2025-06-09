@@ -11,22 +11,40 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Database\QueryException;
 
 class BooksController extends Controller
 {
     use AuthorizesRequests;
 
     // Display a listing of the resource.
-    public function index($number)
+    public function index(Request $request)
     {
+        $number = $request->query('paginate', null);
+
+
         if ($number) {
             $books = Books::with('category')
                 ->orderBy('created_at', 'desc')
                 ->paginate($number);
+
+            // Add img_url to each book
+            $books->getCollection()->transform(function ($book) {
+                $img_url = $book->img ? asset('uploads/books/' . $book->img) : null;
+                $book->img = $img_url; // Add img_url to the book data
+                return $book;
+            });
         } else {
             $books = Books::with('category')
                 ->orderBy('created_at', 'desc')
                 ->get();
+
+            // Add img_url to each book
+            $books->transform(function ($book) {
+                $img_url = $book->img ? asset('uploads/books/' . $book->img) : null;
+                $book->img = $img_url; // Add img_url to the book data
+                return $book;
+            });
         }
         return response()->json([
             'success' => true,
@@ -60,8 +78,12 @@ class BooksController extends Controller
                 'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'title' => 'required|string|max:255',
                 'author' => 'nullable|string|max:255',
+                'release_date' => 'nullable|date',
+                'total_page' => 'nullable|integer|min:1',
+                'description' => 'nullable|string',
                 'category_id' => 'required|exists:categories,id',
                 'stock' => 'required|integer|min:1',
+                'status' => 'required|in:active,inactive',
             ]);
 
             if ($validator->fails()) {
@@ -77,15 +99,23 @@ class BooksController extends Controller
             }
             $slug = Str::slug($request->input('title'), '-');
 
-            $books = Books::updateOrCreate(
-                ['id' => $request->input('id')],
-                array_merge(
-                    $validator->validated(),
-                    [
-                        'slug' => $slug,
-                    ]
-                )
-            );
+            try {
+                $books = Books::updateOrCreate(
+                    ['id' => $request->input('id')],
+                    array_merge(
+                        $validator->validated(),
+                        [
+                            'slug' => $slug,
+                        ]
+                    )
+                );
+            } catch (QueryException $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A book with the same slug already exists.',
+                    // 'errors' => $e->getMessage(),
+                ], 409);
+            }
 
             // Handle image upload if provided
             if ($request->hasFile('img')) {

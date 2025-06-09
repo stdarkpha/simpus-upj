@@ -9,7 +9,7 @@ withDefaults(
       separator?: string;
    }>(),
    {
-      separator: "i-lucide-chevron-right",
+      separator: "lucide-chevron-right",
    }
 );
 
@@ -33,7 +33,7 @@ import { Icon } from "@iconify/vue";
                </BreadcrumbPage>
             </BreadcrumbItem>
             <BreadcrumbSeparator v-if="index < links.length - 1">
-               <Icon :icon="separator" mode="svg" />
+               <Icon icon="lucide:chevron-right" />
             </BreadcrumbSeparator>
          </template>
       </BreadcrumbList>

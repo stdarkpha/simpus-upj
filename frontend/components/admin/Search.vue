@@ -128,12 +128,13 @@ function handleSelectLink(link: string) {
 }
 
 import Kbd from "@/components/admin/base/Kbd.vue";
+import { Icon } from "@iconify/vue";
 </script>
 
 <template>
    <SidebarMenuButton as-child tooltip="Search">
       <Button variant="outline" size="sm" class="text-xs" @click="openCommand = !openCommand">
-         <Icon name="i-lucide-search" />
+         <Icon icon="lucide-search" />
          <span class="font-normal group-data-[collapsible=icon]:hidden">Search Feature</span>
          <div class="ml-auto flex items-center space-x-0.5 group-data-[collapsible=icon]:hidden">
             <Kbd>{{ metaSymbol }}</Kbd>
@@ -149,14 +150,15 @@ import Kbd from "@/components/admin/base/Kbd.vue";
          <CommandSeparator />
          <template v-for="nav in navMenu" :key="nav.title">
             <CommandGroup v-if="nav.children" :heading="nav.title">
-               <CommandItem v-for="item in nav.children" :key="item.title" class="gap-2" :value="item.title" @select="item.link && handleSelectLink(item.link)">
-                  <Icon name="i-radix-icons-circle" />
+               <CommandItem v-for="item in nav.children" :key="item.title" class="gap-2" :value="item.title"
+                  @select="item.link && handleSelectLink(item.link)">
+                  <Icon icon="i-radix-icons-circle" />
                   {{ item.title }}
                </CommandItem>
             </CommandGroup>
             <CommandGroup class="p-0" v-else>
                <CommandItem class="gap-2" :value="nav.title" @select="nav.link && handleSelectLink(nav.link)">
-                  <Icon name="i-radix-icons-circle" />
+                  <Icon icon="i-radix-icons-circle" />
                   {{ nav.title }}
                </CommandItem>
             </CommandGroup>

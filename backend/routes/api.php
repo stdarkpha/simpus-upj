@@ -7,14 +7,14 @@ use App\Http\Controllers\Api\BooksController;
 use App\Http\Controllers\Api\LendingController;
 
 
-Route::post('/register', [UserController::class, 'registerMahasiswa']);
-Route::post('/login', [UserController::class, 'login']);
+Route::post('/user/register', [UserController::class, 'registerMahasiswa']);
+Route::post('/user/login', [UserController::class, 'login']);
 
 // List all categories
 Route::get('/categories', [CategoriesController::class, 'index']);
 
 // List all books
-Route::get('/books/{id}', [BooksController::class, 'index']);
+Route::get('/books', [BooksController::class, 'index']);
 // List books by category
 Route::get('/books/category', [BooksController::class, 'indexByCategory']);
 // show book detail
@@ -27,14 +27,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [UserController::class, 'detail']);
         Route::post('/logout', [UserController::class, 'logout']);
         Route::get('/{id}', [UserController::class, 'show']);
-        Route::post('/{id}', [UserController::class, 'update']);
-        Route::post('/dosen', [UserController::class, 'createDosen']);
+        Route::post('/store', [UserController::class, 'store']);
         Route::delete('/{id}', [UserController::class, 'destroy']);
     });
 
     Route::prefix('categories')->group(function () {
         // Create or update a category (admin only)
         Route::post('/', [CategoriesController::class, 'store']);
+        // Show category detail by ID
+        Route::get('/{id}', [CategoriesController::class, 'show']);
         // Delete a category (admin only)
         Route::delete('/{id}', [CategoriesController::class, 'destroy']);
     });

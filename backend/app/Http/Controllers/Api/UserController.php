@@ -41,7 +41,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'nim' => 'required|numeric|unique:users,nim',
+            'uid' => 'required|numeric|unique:users,uid',
         ]);
 
         if ($validator->fails()) {
@@ -63,7 +63,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'mahasiswa',
-            'nim' => $validated['nim'],
+            'uid' => $validated['uid'],
         ]);
 
         if ($user) {
@@ -81,15 +81,17 @@ class UserController extends Controller
     }
 
     // Admin creates dosen user
-    public function createDosen(Request $request)
+    public function store(Request $request)
     {
         try {
             $this->authorize('admin');
 
             $validator = Validator::make($request->all(), [
+                'id' => 'nullable|integer',
                 'name' => 'required|string|max:255',
+                'uid' => 'nullable|string',
                 'email' => 'required|email|unique:users',
-                'password' => 'required|string|min:6|confirmed',
+                'password' => 'nullable|string|min:6|confirmed',
             ]);
 
             if ($validator->fails()) {
@@ -101,22 +103,32 @@ class UserController extends Controller
                         })
                         ->values()
                         ->all(),
-                ], 422);
+                ]);
             }
 
             $validated = $validator->validated();
 
-            $user = User::create([
-                'name' => $validated['name'],
+            $updateData = [
                 'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
+                'name' => $validated['name'],
                 'role' => 'dosen',
-            ]);
+                'uid' => $validated['uid'] ?? null,
+            ];
+
+            if (!empty($validated['password'])) {
+                $updateData['password'] = Hash::make($validated['password']);
+            }
+
+            $user = User::updateOrCreate(
+                ['id' => $validated['id']],
+                $updateData
+            );
 
             if ($user) {
+                $message = $validated['id'] ? $user->role . ' updated successfully.' : $user->role . ' created successfully.';
                 return response()->json([
                     'success' => true,
-                    'message' => 'Dosen created successfully.',
+                    'message' => $message,
                     'data' => $user,
                 ], 201);
             } else {
@@ -175,56 +187,16 @@ class UserController extends Controller
         }
     }
 
-    // Update user (admin or self)
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        $this->authorize('update', $user);
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => [
-                'sometimes',
-                'required',
-                'email',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'password' => 'sometimes|nullable|string|min:6|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => collect($validator->errors()->toArray())
-                    ->map(function ($messages) {
-                        return $messages[0] ?? '';
-                    })
-                    ->values()
-                    ->all(),
-            ], 422);
-        }
-
-        $validated = $validator->validated();
-
-        $user->update([
-            'name' => $validated['name'] ?? $user->name,
-            'email' => $validated['email'] ?? $user->email,
-            'password' => !empty($validated['password']) ? Hash::make($validated['password']) : $user->password,
-        ]);
-        return response()->json([
-            'success' => true,
-            'message' => 'User updated successfully.',
-            'data' => $user,
-        ]);
-    }
-
     // Delete user (admin only)
     public function destroy($id)
     {
         $this->authorize('admin');
         $user = User::findOrFail($id);
         $user->delete();
-        return response()->json(['message' => 'User deleted']);
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted'
+        ]);
     }
 
     public function login(Request $request)

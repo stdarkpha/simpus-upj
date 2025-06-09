@@ -12,115 +12,37 @@ const navMenu: any = [
             link: "/admin",
          },
          {
-            title: "Inbox",
-            icon: "ic:outline-mail",
-            link: "/admin/inbox",
-         },
-         {
-            title: "Section",
-            icon: "material-symbols:team-dashboard-outline",
-            link: "/admin/section",
-            only: [1],
-         },
-         {
             title: "Manage User",
             icon: "ic:outline-people",
             link: "/admin/user",
-            only: [1],
-         },
-         {
-            title: "Social Media",
-            icon: "ion:share-social-outline",
-            link: "/admin/socialmedia",
-            only: [1, 2],
-         },
-         {
-            title: "Setting",
-            icon: "ic:outline-settings",
-            only: [1, 2],
-            children: [
-               {
-                  title: "General",
-                  link: "/admin/setting",
-               },
-               {
-                  title: "About Footer",
-                  link: "/admin/setting/about",
-               },
-               {
-                  title: "Contact Info",
-                  link: "/admin/setting/contact",
-               },
-            ],
+            // only: [1],
          },
       ],
    },
    {
-      heading: "Pages CMS",
+      heading: "Library",
       items: [
          {
-            title: "Home",
-            icon: "meteor-icons:home",
-            only: [1, 2],
-            children: [
-               {
-                  title: "Header",
-                  link: "/admin/home",
-               },
-               {
-                  title: "Product",
-                  link: "/admin/home/product",
-               },
-               {
-                  title: "Call Us",
-                  link: "/admin/home/contact",
-               },
-               {
-                  title: "Client",
-                  link: "/admin/home/client",
-               },
-            ],
-         },
-         {
-            title: "About",
-            icon: "cuida:building-outline",
-            only: [1, 2],
-            children: [
-               {
-                  title: "Header",
-                  link: "/admin/about",
-               },
-               {
-                  title: "Company",
-                  link: "/admin/about/company",
-               },
-               {
-                  title: "Reason",
-                  link: "/admin/about/reason",
-               },
-            ],
-         },
-         {
-            title: "Services",
+            title: "Book",
             icon: "material-symbols:design-services-outline-rounded",
-            link: "/admin/service",
+            link: "/admin/library/book",
          },
          {
-            title: "Projects",
+            title: "Lending",
             icon: "material-symbols:news-outline",
-            link: "/admin/project",
+            link: "/admin/library/lending",
          },
          {
-            title: "Contact",
-            only: [1, 2],
-            icon: "ic:outline-contact-page",
-            link: "/admin/setting/contact",
+            title: "Scanner",
+            icon: "iconamoon:scanner-light",
+            link: "/admin/library/scanner",
+            // only: [1],
          },
       ],
    },
 ];
 
-import { type UserData } from "@/components/admin/user/type";
+const { data } = useAuth();
 
 import NavHeader from "@/components/admin/layout/SidebarNavHeader.vue";
 import LayoutSidebarNavGroup from "@/components/admin/layout/SidebarNavGroup.vue";
@@ -153,7 +75,7 @@ import SidebarNavFooter from "@/components/admin/layout/SidebarNavFooter.vue";
          </SidebarContent>
       </SidebarContent>
       <SidebarFooter>
-         <SidebarNavFooter :user="{ name: '', email: '', avatar: null }" />
+         <SidebarNavFooter v-if="data?.data" :user="data.data" />
       </SidebarFooter>
    </Sidebar>
 </template>
