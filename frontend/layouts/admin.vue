@@ -25,15 +25,10 @@ watch(
       }
    }
 );
-
-import { Toaster } from '@/components/ui/sonner'
-import 'vue-sonner/style.css'
 </script>
 
 <template>
    <div>
-      <!-- Layout admin -->
-      <Toaster style="" rich-colors />
       <SidebarProvider>
          <AppSidebar />
          <div class="flex flex-col fixed sm:hidden bottom-0 right-0 m-4 gap-2 z-50">

@@ -10,11 +10,15 @@ definePageMeta({
 </script>
 
 <template>
-   <div class="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <NuxtLink to="/" :class="cn(buttonVariants({ variant: 'ghost' }), 'absolute right-4 top-4 md:right-8 md:top-8')"> Home </NuxtLink>
+   <div
+      class="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+      <NuxtLink to="/" :class="cn(buttonVariants({ variant: 'ghost' }), 'absolute right-4 top-4 md:right-8 md:top-8')">
+         Home </NuxtLink>
       <div class="relative hidden h-full flex-col p-10 text-white dark:border-r lg:flex">
          <div class="absolute inset-0">
-            <img src="https://images.pexels.com/photos/2041540/pexels-photo-2041540.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="w-full h-full object-cover dark:grayscale opacity-40" alt="Background Admin" />
+            <img
+               src="https://images.pexels.com/photos/2041540/pexels-photo-2041540.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+               class="w-full h-full object-cover dark:grayscale dark:opacity-40" alt="Background Admin" />
          </div>
          <div class="relative z-20 flex gap-4 items-center text-lg font-medium">
             <!-- <img class="grayscale brightness-[5]" src="/assets/favicon.png" alt="Logo"> -->

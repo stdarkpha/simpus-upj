@@ -21,7 +21,7 @@
    }
 
    .container {
-      @apply px-8;
+      @apply px-8 mx-auto;
    }
 }
 

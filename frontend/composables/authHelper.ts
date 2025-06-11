@@ -6,6 +6,11 @@ export const loggedIn = ref(false);
 
 export const userLogin = async (email: string, password: string) => {
     isLoggin.value = true;
+    if (!email || !password) {
+        toast.error("Please enter your email and password");
+        isLoggin.value = false;
+        return;
+    }
     const payload = {
         email: email,
         password: password
