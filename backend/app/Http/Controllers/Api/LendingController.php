@@ -44,8 +44,8 @@ class LendingController extends Controller
         if (!$book || $book->stock < 1) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cant add book to cart, book is not available or out of stock.',
-            ], 400);
+                'message' => 'Tidak dapat menambahkan buku ke Tas, buku tidak tersedia atau stok habis.',
+            ]);
         }
 
         $alreadyInCart = LendingCart::where('user_id', $user_id)
@@ -55,8 +55,8 @@ class LendingController extends Controller
         if ($alreadyInCart) {
             return response()->json([
                 'success' => false,
-                'errors' => ['Book is already in your cart.'],
-            ], 400);
+                'message' => 'Buku sudah ada di Tas Kamu.',
+            ]);
         }
 
         $cart = LendingCart::create([
@@ -67,7 +67,7 @@ class LendingController extends Controller
         return response()->json([
             'success' => true,
             'data' => $cart,
-            'message' => 'Book added to cart successfully.',
+            'message' => 'Buku berhasil ditambahkan ke Tas.',
         ]);
     }
 
@@ -94,6 +94,15 @@ class LendingController extends Controller
                 'message'   => 'Your cart is empty.',
             ]);
         }
+
+        // add image URL to each book in the cart
+        $cartItems->transform(function ($cartItem) {
+            if ($cartItem->book) {
+                $img_url = $cartItem->book->img ? asset('uploads/books/' . $cartItem->book->img) : null;
+                $cartItem->book->img = $img_url;
+            }
+            return $cartItem;
+        });
 
         return response()->json([
             'success'       => true,
@@ -129,6 +138,26 @@ class LendingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Book removed from cart successfully.',
+        ]);
+    }
+
+    // clear cart
+    public function clearCart(Request $request)
+    {
+        $user_id = $request->user()->id;
+
+        if (!$user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
+
+        LendingCart::where('user_id', $user_id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cart cleared successfully.',
         ]);
     }
 
@@ -188,7 +217,7 @@ class LendingController extends Controller
 
             // Create a new lending record
             $lending = Lending::create([
-                'transaction_id' => uniqid('lend_'),
+                'transaction_id' => uniqid('#'),
                 'user_id' => $user_id,
                 'lend_date' => now(),
                 'return_date' => now()->addDays((int) $request->days),
@@ -238,7 +267,8 @@ class LendingController extends Controller
             ], 401);
         }
 
-        $lendings = Lending::where('user_id', $user_id)
+        $lendings = Lending::with('compact')
+            ->where('user_id', $user_id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -256,10 +286,12 @@ class LendingController extends Controller
         ]);
     }
 
+    // generate lending QR code by user request and 
+
     // get detail lending by id
     public function detail($id)
     {
-        $lending = Lending::with(['items', 'user'])
+        $lending = Lending::with('user')
             ->where('id', $id)
             ->first();
 
@@ -274,7 +306,7 @@ class LendingController extends Controller
 
         $qrdata = json_encode([
             'id_lending' => $lending->id,
-            'transaction_id' => $lending->trasaction_id,
+            'transaction_id' => $lending->transaction_id,
             'user_id' => $lending->user_id,
             'lend_date' => $lending->lend_date,
         ]);
@@ -285,6 +317,37 @@ class LendingController extends Controller
             'success' => true,
             'data' => $lending,
             'message' => 'Lending details retrieved successfully.',
+        ]);
+    }
+
+    // get first lending where status still pending
+    public function reminderLending()
+    {
+        $lending = Lending::with(['items'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        if (!$lending) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No pending lending found.',
+            ], 404);
+        }
+
+        // Add image URL to each book in the lending items > book > img
+        $lending->items->transform(function ($item) {
+            if ($item->book) {
+                $img_url = $item->book->img ? asset('uploads/books/' . $item->book->img) : null;
+                $item->book->img = $img_url;
+            }
+            return $item;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $lending,
+            'message' => 'Pending lending retrieved successfully.',
         ]);
     }
 

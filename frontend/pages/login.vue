@@ -1,5 +1,5 @@
 <template>
-   <div class="w-full h-screen flex flex-col items-center justify-center gap-16">
+   <div class="w-full h-screen flex flex-col items-center justify-center px-8 gap-16">
       <img class="w-32 h-auto" src="/Logo-upj.webp" alt="Logo website">
       <form @submit.prevent="userLogin(email, password)" class="w-full flex flex-col gap-6 max-w-sm">
          <h2 class="font-bold text-zinc-800">Masuk untuk meminjam</h2>
@@ -33,6 +33,6 @@ definePageMeta({
 import { motion } from 'motion-v'
 import { Icon } from '@iconify/vue';
 
-const email = ref("");
-const password = ref("");
+const email = ref("farouq@upj.com");
+const password = ref("admin123");
 </script>

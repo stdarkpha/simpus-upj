@@ -19,6 +19,9 @@ Route::get('/books', [BooksController::class, 'index']);
 Route::get('/books/category', [BooksController::class, 'indexByCategory']);
 // show book detail
 Route::get('/books/slug/{slug}', [BooksController::class, 'showBySlug']);
+// book search
+Route::get('/books/search', [BooksController::class, 'search']);
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('user')->group(function () {
@@ -56,12 +59,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cart', [LendingController::class, 'addToCart']);
         // Show lending cart
         Route::get('/cart', [LendingController::class, 'viewCart']);
+        // Clear lending cart
+        Route::delete('/cart/clear', [LendingController::class, 'clearCart']);
         // Remove book from lending cart
         Route::delete('/cart/{id}', [LendingController::class, 'removeFromCart']);
         // checkout lending cart
         Route::post('/confirm', [LendingController::class, 'confirm']);
         // Show lending history
         Route::get('/history', [LendingController::class, 'history']);
+        // Show lending history by user ID
+        Route::get('/reminder', [LendingController::class, 'reminderLending']);
         // Show lending detail by ID
         Route::get('/history/{id}', [LendingController::class, 'detail']);
         // claim book

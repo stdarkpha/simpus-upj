@@ -60,6 +60,16 @@ class BooksController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Add img_url to each book in the categories
+        $books->transform(function ($category) {
+            $category->books->transform(function ($book) {
+                $img_url = $book->img ? asset('uploads/books/' . $book->img) : null;
+                $book->img = $img_url; // Add img_url to the book data
+                return $book;
+            });
+            return $category;
+        });
+
         return response()->json([
             'success' => true,
             'data' => $books,
@@ -225,5 +235,37 @@ class BooksController extends Controller
                 'message' => 'You are not authorized to perform this action.',
             ], 403);
         }
+    }
+
+    // function to get book by search query
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (!$query) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Query parameter is required',
+            ]);
+        }
+
+        $books = Books::with('category')
+            ->where('title', 'like', '%' . $query . '%')
+            ->orWhere('author', 'like', '%' . $query . '%')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Add img_url to each book
+        $books->transform(function ($book) {
+            $img_url = $book->img ? asset('uploads/books/' . $book->img) : null;
+            $book->img = $img_url; // Add img_url to the book data
+            return $book;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $books,
+            'message' => 'Books retrieved successfully for search query',
+        ]);
     }
 }
