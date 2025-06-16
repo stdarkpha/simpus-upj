@@ -70,10 +70,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Show lending history by user ID
         Route::get('/reminder', [LendingController::class, 'reminderLending']);
         // Show lending detail by ID
-        Route::get('/history/{id}', [LendingController::class, 'detail']);
+        Route::get('/history/{id}', [LendingController::class, 'generateQR']);
+        Route::get('/history/detail/{id}', [LendingController::class, 'detail']);
+
         // claim book
         Route::post('/claim/{id}', [LendingController::class, 'claim']);
-        // return book
-        Route::post('/return/{id}', [LendingController::class, 'returnBook']);
     });
 });

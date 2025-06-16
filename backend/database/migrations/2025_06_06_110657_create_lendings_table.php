@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->date('lend_date');
             $table->date('return_date')->nullable();
-            $table->enum('status', ['pending', 'claim', 'returned', 'overdue'])->default('pending');
+            $table->enum('status', ['pending', 'claim', 'returned', 'overdue', 'reject'])->default('pending');
             $table->timestamps();
         });
     }

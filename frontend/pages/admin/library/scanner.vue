@@ -1,16 +1,16 @@
 <template>
-  <Layout>
-
-  </Layout>
+   <Layout>
+      <AdminScanner />
+   </Layout>
 </template>
 
 <script lang="ts" setup>
 definePageMeta({
-  layout: 'admin',
-  middleware: ["admin"], // Use the new admin-auth middleware
-})
+   layout: "admin",
+   middleware: ["admin"], // Use the new admin-auth middleware
+});
 
-import Layout from '@/components/admin/library/layout.vue'
+import Layout from "@/components/admin/library/layout.vue";
 </script>
 
 <style></style>

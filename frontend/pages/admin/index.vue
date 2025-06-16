@@ -7,57 +7,57 @@
          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle class="text-sm font-medium"> Total Client </CardTitle>
-                  <Icon icon="mdi:user-group" class="text-xl" />
+                  <CardTitle class="text-sm font-medium"> Total Buku </CardTitle>
+                  <Icon icon="ph:books-fill" class="text-xl" />
                </CardHeader>
                <CardContent>
                   <div class="text-2xl font-bold">
                      <!-- {{ store.data_client.length }} -->
                   </div>
-                  <p class="text-xs text-muted-foreground">IMS Global Client</p>
+                  <p class="text-xs text-muted-foreground">Buku pada perpustakaan</p>
                </CardContent>
             </Card>
             <Card>
                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle class="text-sm font-medium"> Total Product </CardTitle>
-                  <Icon icon="ant-design:product-filled" class="text-xl" />
+                  <CardTitle class="text-sm font-medium"> Total Pengguna </CardTitle>
+                  <Icon icon="mdi:user-group" class="text-xl" />
                </CardHeader>
                <CardContent>
                   <div class="text-2xl font-bold">
                      <!-- {{ store.data_product.length }} -->
                   </div>
-                  <p class="text-xs text-muted-foreground">Highlight Product Home</p>
+                  <p class="text-xs text-muted-foreground">Mahasiswa Terdaftar</p>
                </CardContent>
             </Card>
             <Card>
                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle class="text-sm font-medium"> Total Project </CardTitle>
-                  <Icon icon="basil:document-solid" class="text-xl" />
+                  <CardTitle class="text-sm font-medium"> Total Peminjaman </CardTitle>
+                  <Icon icon="mdi:book-play" class="text-xl" />
                </CardHeader>
                <CardContent>
                   <div class="text-2xl font-bold">
                      <!-- {{ store.data_project.length }} -->
                   </div>
-                  <p class="text-xs text-muted-foreground">Reference Project</p>
+                  <p class="text-xs text-muted-foreground">Peminjaman Buku</p>
                </CardContent>
             </Card>
             <Card>
                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle class="text-sm font-medium"> Inbox </CardTitle>
-                  <Icon icon="ic:round-mail" class="text-xl" />
+                  <CardTitle class="text-sm font-medium"> Total Pengembalian </CardTitle>
+                  <Icon icon="mdi:book-sync" class="text-xl" />
                </CardHeader>
                <CardContent>
                   <div class="text-2xl font-bold">
                      <!-- {{ store.data_contact.length }} -->
                   </div>
-                  <p class="text-xs text-muted-foreground">Inbox Contact Us</p>
+                  <p class="text-xs text-muted-foreground">Pengembalian Buku</p>
                </CardContent>
             </Card>
          </div>
          <div>
             <Card>
                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle class="text-sm font-medium"> Analytics Overview </CardTitle>
+                  <CardTitle class="text-sm font-medium">Grafik Analitik </CardTitle>
                   <Icon icon="solar:chart-bold" class="text-xl" />
                </CardHeader>
                <CardContent>

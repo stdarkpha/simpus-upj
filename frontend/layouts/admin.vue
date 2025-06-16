@@ -47,10 +47,8 @@ watch(
             <DropdownMenu>
                <DropdownMenuTrigger as-child>
                   <Button variant="outline">
-                     <Icon icon="radix-icons:moon"
-                        class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                     <Icon icon="radix-icons:sun"
-                        class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                     <Icon icon="radix-icons:moon" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                     <Icon icon="radix-icons:sun" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                      <span class="sr-only">Toggle theme</span>
                   </Button>
                </DropdownMenuTrigger>
@@ -70,25 +68,23 @@ watch(
                   <DropdownMenu>
                      <DropdownMenuTrigger as-child>
                         <Button variant="outline">
-                           <Icon icon="ion:language" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-                           <!-- <span class="hidden md:block">{{ locale == "en" ? "English" : "Indonesia" }}</span> -->
-                           <Icon class="hidden md:block" icon="iconamoon:arrow-down-2-bold" />
+                           <Icon icon="cuida:notification-bell-outline" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
                         </Button>
                      </DropdownMenuTrigger>
                      <DropdownMenuContent align="end">
-                        <!-- <DropdownMenuItem @click="setLocale('en')"> English </DropdownMenuItem>
-                        <DropdownMenuItem @click="setLocale('id')"> Indonesia </DropdownMenuItem> -->
+                        <DropdownMenuItem disabled class="p-4">
+                           <Icon icon="iconamoon:notification-off-bold" />
+                           <span class="text-muted-foreground">No notifications yet</span>
+                        </DropdownMenuItem>
                      </DropdownMenuContent>
                   </DropdownMenu>
 
                   <DropdownMenu>
                      <DropdownMenuTrigger as-child>
                         <Button variant="outline">
-                           <Icon icon="radix-icons:moon"
-                              class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                           <Icon icon="radix-icons:sun"
-                              class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                           <span class="sr-only">Toggle theme</span>
+                           <Icon v-if="colorMode.value == 'dark'" icon="radix-icons:moon" class="text-white" />
+                           <Icon v-if="colorMode.value == 'light'" icon="radix-icons:sun" class="" />
+                           <span class="capitalize">{{ colorMode.value }}</span>
                         </Button>
                      </DropdownMenuTrigger>
                      <DropdownMenuContent align="end">

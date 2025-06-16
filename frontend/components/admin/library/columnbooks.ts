@@ -113,7 +113,7 @@ export const columns: ColumnDef<Data>[] = [
             edit: '/admin/library/book/' + row.original.id,
             delete: endpoint + 'books/' + row.original.id,
             fetch: async () => {
-                await useAdminStore().fetchBooks(20)
+                await useAdminStore().fetchBooks()
             }
         }),
     },

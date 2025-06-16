@@ -289,7 +289,7 @@ class LendingController extends Controller
     // generate lending QR code by user request and 
 
     // get detail lending by id
-    public function detail($id)
+    public function generateQR($id)
     {
         $lending = Lending::with('user')
             ->where('id', $id)
@@ -302,16 +302,51 @@ class LendingController extends Controller
             ], 404);
         }
 
-        $user_name = $lending->user ? $lending->user->name : 'Unknown User';
-
         $qrdata = json_encode([
             'id_lending' => $lending->id,
+            'status' => $lending->status,
             'transaction_id' => $lending->transaction_id,
-            'user_id' => $lending->user_id,
+            'user_details' => [
+                'name' => $lending->user->name,
+                'email' => $lending->user->email,
+                'uid' => $lending->user->uid,
+                'role' => $lending->user->role,
+            ],
             'lend_date' => $lending->lend_date,
+            'return_date' => $lending->return_date,
         ]);
 
-        $lending->qr_code = QrCodeHelper::generateQR($qrdata, $user_name);
+        $lending->qr_code = QrCodeHelper::generateQR($qrdata, $lending->transaction_id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $lending,
+            'message' => 'Lending details retrieved successfully.',
+        ]);
+    }
+
+    // get lending detail by id
+    public function detail($id)
+    {
+        $lending = Lending::with(['compact', 'user'])
+            ->where('id', $id)
+            ->first();
+
+        if (!$lending) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lending not found.',
+            ], 404);
+        }
+
+        // Add image URL to each book in the lending items > book > img
+        $lending->items->transform(function ($item) {
+            if ($item->book) {
+                $img_url = $item->book->img ? asset('uploads/books/' . $item->book->img) : null;
+                $item->book->img = $img_url;
+            }
+            return $item;
+        });
 
         return response()->json([
             'success' => true,
@@ -324,15 +359,15 @@ class LendingController extends Controller
     public function reminderLending()
     {
         $lending = Lending::with(['items'])
-            ->where('status', 'pending')
+            ->where('status', 'claim')
             ->orderBy('created_at', 'asc')
             ->first();
 
         if (!$lending) {
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => 'No pending lending found.',
-            ], 404);
+            ]);
         }
 
         // Add image URL to each book in the lending items > book > img
@@ -353,51 +388,28 @@ class LendingController extends Controller
 
 
     // change status lending by transaction id
-    public function claim($id)
+    public function claim($id, Request $request)
     {
         try {
             $this->authorize('admin');
 
-            $lending = Lending::where('transaction_id', $id)->first();
-
-            if (!$lending) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Lending not found.',
-                ], 404);
-            }
-
-            // Check if the lending is already claimed
-            if ($lending->status !== 'pending') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Lending has already been claimed or processed.',
-                ], 400);
-            }
-
-            // Update the lending status to 'claimed'
-            $lending->status = 'claim';
-            $lending->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Lending claimed successfully.',
+            // Validate the request action approve / reject
+            $validator = Validator::make($request->all(), [
+                'action' => 'required|in:approve,reject',
             ]);
-        } catch (AuthorizationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You are not authorized to perform this action.',
-            ], 403);
-        }
-    }
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => collect($validator->errors()->toArray())
+                        ->map(function ($messages) {
+                            return $messages[0] ?? '';
+                        })
+                        ->values()
+                        ->all(),
+                ], 422);
+            }
 
-    // return lending book
-    public function returnBook($id)
-    {
-        try {
-            $this->authorize('admin');
-
-            $lending = Lending::where('transaction_id', $id)->first();
+            $lending = Lending::where('id', $id)->first();
 
             if (!$lending) {
                 return response()->json([
@@ -406,29 +418,55 @@ class LendingController extends Controller
                 ], 404);
             }
 
-            // Check if the lending is already returned
             if ($lending->status === 'returned') {
                 return response()->json([
-                    'success' => false,
+                    'success' => true,
                     'message' => 'Lending has already been returned.',
-                ], 400);
+                ]);
             }
 
-            // Update the lending status to 'returned'
-            $lending->status = 'returned';
+            if ($request->action === 'reject') {
+                $lending->status = 'reject';
+                $lending->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Lending has been rejected.',
+                ]);
+            }
+
+            switch ($lending->status) {
+                case 'pending':
+                    $lending->status = 'claim';
+                    $message = 'Lending has been approved.';
+                    break;
+                case 'overdue':
+                    $lending->status = 'returned';
+                    $message = 'Lending has been returned with overdue status.';
+                    break;
+                default:
+                    $lending->status = 'returned';
+                    $message = 'Lending has been returned.';
+                    break;
+            }
             $lending->save();
 
-            // Increase book stock for each item in the lending
-            foreach ($lending->items as $item) {
-                $book = Books::find($item->book_id);
-                if ($book) {
-                    $book->increment('stock', $item->amount);
+            if ($lending->status == 'returned') {
+                // dd($lending->item);
+
+
+                // Increase book stock for each item in the lending
+                foreach ($lending->item as $item) {
+                    $book = Books::find($item->book_id);
+                    if ($book) {
+                        $book->increment('stock', (int) $item->amount);
+                    }
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Book returned successfully.',
+                'message' => $message,
             ]);
         } catch (AuthorizationException $e) {
             return response()->json([

@@ -31,17 +31,14 @@ export const useAdminStore = defineStore("admin", () => {
     return data.value
   }
 
-  const fetchBooks = async (paginate: number) => {
+  const fetchBooks = async () => {
     const { data } = await useFetch<any>(`${config.public.API_URL}books`, {
       headers: {
         Authorization: `Bearer ${token.value}`,
         "Accept": "application/json",
       },
-      params: {
-        paginate: paginate,
-      }
     })
-    data_books.value = data.value?.data?.data
+    data_books.value = data.value?.data
   }
 
   const fetchBooksCategory = async () => {
@@ -69,6 +66,20 @@ export const useAdminStore = defineStore("admin", () => {
     return data.value
   }
 
+  const setLending = async (lend_id: number, action: string) => {
+    const { data } = await useFetch(`${config.public.API_URL}lending/claim/${lend_id}`, {
+      method: "POST",
+      body: {
+        action: action,
+      },
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "Accept": "application/json",
+      },
+    })
+    return data.value
+  }
+
   return {
     data_users,
     data_books,
@@ -81,5 +92,7 @@ export const useAdminStore = defineStore("admin", () => {
     fetchBookDetails,
     fetchBooksCategory,
     fetchBooksCategoryDetails,
+
+    setLending,
   }
 });

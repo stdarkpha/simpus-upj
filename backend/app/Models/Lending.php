@@ -29,6 +29,11 @@ class Lending extends Model
         return $this->hasMany(LendingItem::class)->select(['id', 'lending_id', 'book_id'])->with('book')->with('book.category:id,name');
     }
 
+    public function item()
+    {
+        return $this->hasMany(LendingItem::class);
+    }
+
     public function compact()
     {
         return $this->hasMany(LendingItem::class)
