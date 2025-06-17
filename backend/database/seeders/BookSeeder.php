@@ -266,7 +266,7 @@ class BookSeeder extends Seeder
                 'color' => $color,
                 'slug' => $slug,
                 'author' => $faker->name,
-                'category_id' => $faker->numberBetween(1, 2),
+                'category_id' => $faker->numberBetween(1, 5),
                 'stock' => $faker->numberBetween(1, 10),
                 'description' => $description,
             ]);
