@@ -42,7 +42,6 @@
 
 <script lang="ts" setup>
 import { motion } from "motion-v";
-import { Icon } from "@iconify/vue";
 const config = useRuntimeConfig().public.API_URL;
 const category_index = ref(1);
 const { token } = useAuth();

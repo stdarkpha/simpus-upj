@@ -192,13 +192,6 @@ const status_mapping: Record<string, string> = {
    returned: "Dikembalikan",
    overdue: "Terlambat",
 };
-
-// onMounted(() => {
-//     // set history_data.value[0] as  selected_item
-//     if (history_data.value?.data?.length > 0) {
-//         selected_item.value = history_data.value.data[0];
-//     }
-// });
 </script>
 
 <style></style>
