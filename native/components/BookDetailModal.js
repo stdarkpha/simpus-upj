@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Modal, View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Dimensions, Alert, BackHandler } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import AntDesign from '@expo/vector-icons/AntDesign';
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function BookDetailModal({ visible, onClose, item, loading, setLoading }) {
    // Use state for available state
@@ -118,12 +119,12 @@ export default function BookDetailModal({ visible, onClose, item, loading, setLo
                   <View style={styles.bottomBar}>
                      {!isAvailable && item.stock ? (
                         <TouchableOpacity style={styles.addToCartBtn} onPress={handleAddToCart} disabled={loading || isAvailable || addCartLoading} activeOpacity={0.8}>
-                           {loading || addCartLoading ? <ActivityIndicator color="#fff" style={{ marginRight: 8 }} /> : <Text style={styles.cartIcon}>🛒</Text>}
+                           {loading || addCartLoading ? <ActivityIndicator color="#fff" style={{ marginRight: 8 }} /> : <Ionicons name="bag-add-outline" size={24} color="white" />}
                            <Text style={styles.addToCartText}>{loading || addCartLoading ? "Loading.." : "Tambah ke Tas"}</Text>
                         </TouchableOpacity>
                      ) : (
                         <View style={styles.disabledBtn}>
-                           <Text style={styles.disabledIcon}>🚫</Text>
+                           <Ionicons name="bag-remove-outline" size={24} color="#888" />
                            <Text style={styles.disabledText}>{item.stock ? "Sudah ada di Tas" : "Tidak Tersedia"}</Text>
                         </View>
                      )}
@@ -300,17 +301,14 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       backgroundColor: "#dc2626",
       paddingVertical: 16,
+      height: 56,
+      gap: 8,
       borderRadius: 8,
       width: "100%",
    },
-   cartIcon: {
-      fontSize: 22,
-      color: "#fff",
-      marginRight: 8,
-   },
    addToCartText: {
       color: "#fff",
-      fontWeight: "bold",
+      fontWeight: 500,
       fontSize: 16,
    },
    disabledBtn: {
@@ -320,6 +318,7 @@ const styles = StyleSheet.create({
       backgroundColor: "#e5e7eb",
       paddingVertical: 16,
       borderRadius: 8,
+      gap: 8,
       width: "100%",
    },
    disabledIcon: {
@@ -329,7 +328,7 @@ const styles = StyleSheet.create({
    },
    disabledText: {
       color: "#888",
-      fontWeight: "bold",
+      fontWeight: 500,
       fontSize: 16,
    },
 });

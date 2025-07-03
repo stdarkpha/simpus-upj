@@ -275,7 +275,6 @@ const styles = StyleSheet.create({
       justifyContent: "space-between",
       paddingHorizontal: 16,
       marginTop: 24,
-      marginBottom: 8,
    },
    sectionTitle: {
       fontSize: 20,

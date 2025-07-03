@@ -51,7 +51,7 @@ export default function Dashboard({ onLogout, navigation }) {
             <View style={styles.sectionContainer}>
                <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Buku Terbaru</Text>
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => navigation.navigate("BookPage")}>
                      <Text style={styles.sectionLink}>Lihat Semua</Text>
                   </TouchableOpacity>
                </View>
@@ -65,9 +65,6 @@ export default function Dashboard({ onLogout, navigation }) {
             <View style={styles.sectionContainer}>
                <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Kategori Buku</Text>
-                  <TouchableOpacity>
-                     <Text style={styles.sectionLink}>Lihat Semua</Text>
-                  </TouchableOpacity>
                </View>
                <UserHomeCategory navigation={navigation} />
             </View>
@@ -83,7 +80,7 @@ export default function Dashboard({ onLogout, navigation }) {
 }
 
 const styles = StyleSheet.create({
-   container: { flex: 1, },
+   container: { flex: 1 },
    headerBg: {
       backgroundColor: "#E7000B",
       width: "100%",

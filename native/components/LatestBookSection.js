@@ -95,13 +95,10 @@ export default function LatestBookSection() {
 
 const styles = StyleSheet.create({
    latestList: {
-      // paddingVertical: 8,
-      // paddingLeft: 4,
       gap: 16
    },
    latestItem: {
       width: 120,
-      // marginRight: 12,
       alignItems: "flex-start",
    },
    latestImageWrapper: {

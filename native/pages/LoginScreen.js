@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { StyleSheet, SafeAreaView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, navigation }) {
    const [email, setEmail] = useState("farouq@upj.com");
    const [password, setPassword] = useState("qwe123321asd");
    const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -51,13 +51,8 @@ export default function LoginScreen({ onLogin }) {
                </TouchableOpacity>
             </View>
             <Text style={styles.registerText}>
-               Tidak punya akun?{" "}
-               <Text
-                  style={styles.registerLink}
-                  onPress={() => {
-                     /* navigation placeholder */
-                  }}
-               >
+               Belum punya akun?{" "}
+               <Text style={styles.registerLink} onPress={() => navigation.replace("RegisterPage")}>
                   Daftar
                </Text>
             </Text>

@@ -134,7 +134,7 @@ export default function BagPage({ navigation }) {
    // Render
    return (
       <View style={{ flex: 1, backgroundColor: "#fff", position: "relative" }}>
-         <ScrollView contentContainerStyle={{ paddingBottom: 64, paddingHorizontal: 16 }}>
+         <ScrollView contentContainerStyle={{ paddingBottom: 140, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingTop: 0,  }}>
                <Text style={{ fontSize: 20, fontWeight: "bold" }}>Tas Saya</Text>
                <Text style={{ fontWeight: "bold", color: "#dc2626" }}>Total: {cartData.length}</Text>
@@ -144,7 +144,7 @@ export default function BagPage({ navigation }) {
                   <ActivityIndicator size="large" color="#dc2626" />
                </View>
             ) : cartData.length > 0 ? (
-               <View style={{ gap: 16, marginTop: 12}}>
+               <View style={{ gap: 4, marginTop: 16}}>
                   {cartData.map((item) => (
                      <View key={item.id} style={styles.cartItem}>
                         <View style={styles.cartImageWrap}>
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
    cartItem: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: 4,
       padding: 8,
       backgroundColor: "#fff",
       borderRadius: 10,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       height: 320,
       backgroundColor: "#f9fafb",
-      marginTop: 32,
+      marginTop: 16,
       borderRadius: 16,
    },
    bottomActions: {

@@ -4,6 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TransitionPresets } from "@react-navigation/stack";
 
 // Import your page components
 import LoginScreen from "./pages/LoginScreen";
@@ -13,6 +14,7 @@ import BagPage from "./pages/BagPage";
 import HistoryPage from "./pages/HistoryPage";
 import SettingPage from "./pages/SettingPage";
 import UserLayout from "./layouts/UserLayout";
+import RegisterPage from "./pages/RegisterPage";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -48,9 +50,7 @@ function MainTabs({ setIsLoggedIn }) {
          <Tab.Screen name="BookPage" component={withLayout(BookPage)} />
          <Tab.Screen name="BagPage" component={withLayout(BagPage)} />
          <Tab.Screen name="HistoryPage" component={withLayout(HistoryPage)} />
-         <Tab.Screen name="SettingPage">
-            {(props) => withLayout(SettingPage)({ ...props, setIsLoggedIn })}
-         </Tab.Screen>
+         <Tab.Screen name="SettingPage">{(props) => withLayout(SettingPage)({ ...props, setIsLoggedIn })}</Tab.Screen>
       </Tab.Navigator>
    );
 }
@@ -62,9 +62,7 @@ function MainTabs({ setIsLoggedIn }) {
 function AppNavigator({ setIsLoggedIn }) {
    return (
       <AppStack.Navigator screenOptions={{ headerShown: false }}>
-         <AppStack.Screen name="MainTabs">
-            {(props) => <MainTabs {...props} setIsLoggedIn={setIsLoggedIn} />}
-         </AppStack.Screen>
+         <AppStack.Screen name="MainTabs">{(props) => <MainTabs {...props} setIsLoggedIn={setIsLoggedIn} />}</AppStack.Screen>
       </AppStack.Navigator>
    );
 }
@@ -75,10 +73,9 @@ function AppNavigator({ setIsLoggedIn }) {
  */
 function AuthNavigator({ onLogin }) {
    return (
-      <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-         <AuthStack.Screen name="Login">
-            {(props) => <LoginScreen {...props} onLogin={onLogin} />}
-         </AuthStack.Screen>
+      <AuthStack.Navigator screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }}>
+         <AuthStack.Screen name="Login">{(props) => <LoginScreen {...props} onLogin={onLogin} />}</AuthStack.Screen>
+         <AuthStack.Screen name="RegisterPage" component={RegisterPage} />
       </AuthStack.Navigator>
    );
 }
@@ -118,13 +115,5 @@ export default function AppNav() {
    }
 
    // Render the appropriate navigator based on the login state
-   return (
-      <NavigationContainer>
-         {isLoggedIn ? (
-            <AppNavigator setIsLoggedIn={setIsLoggedIn} />
-         ) : (
-            <AuthNavigator onLogin={() => setIsLoggedIn(true)} />
-         )}
-      </NavigationContainer>
-   );
+   return <NavigationContainer>{isLoggedIn ? <AppNavigator setIsLoggedIn={setIsLoggedIn} /> : <AuthNavigator onLogin={() => setIsLoggedIn(true)} />}</NavigationContainer>;
 }

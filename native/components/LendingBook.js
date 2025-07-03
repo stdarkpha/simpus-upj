@@ -72,7 +72,7 @@ export default function LendingBook({ navigation }) {
       <View style={{ marginTop: 16, paddingHorizontal: 16 }}>
          <View style={styles.headerRow}>
             <Text style={styles.title}>Buku Pinjaman</Text>
-            <TouchableOpacity onPress={() => navigation && navigation.navigate("History")}>
+            <TouchableOpacity onPress={() => navigation && navigation.navigate("HistoryPage")}>
                <Text style={styles.seeAll}>Lihat Semua</Text>
             </TouchableOpacity>
          </View>
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
       alignItems: "center",
       justifyContent: "space-between",
       // paddingHorizontal: 16,
-      marginBottom: 4,
+      marginBottom: 8,
    },
    title: {
       fontSize: 20,
