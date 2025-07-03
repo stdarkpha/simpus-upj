@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
 
-const { width } = Dimensions.get("window");
+import Ionicons from '@expo/vector-icons/Ionicons';
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 export default function BagPage({ navigation }) {
    const isFocused = useIsFocused();
@@ -131,10 +133,10 @@ export default function BagPage({ navigation }) {
 
    // Render
    return (
-      <View style={{ flex: 1, backgroundColor: "#fff" }}>
-         <ScrollView contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 16 }}>
+      <View style={{ flex: 1, backgroundColor: "#fff", position: "relative" }}>
+         <ScrollView contentContainerStyle={{ paddingBottom: 64, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingTop: 0,  }}>
-               <Text style={{ fontSize: 24, fontWeight: "bold" }}>Tas Saya</Text>
+               <Text style={{ fontSize: 20, fontWeight: "bold" }}>Tas Saya</Text>
                <Text style={{ fontWeight: "bold", color: "#dc2626" }}>Total: {cartData.length}</Text>
             </View>
             {loading ? (
@@ -142,7 +144,7 @@ export default function BagPage({ navigation }) {
                   <ActivityIndicator size="large" color="#dc2626" />
                </View>
             ) : cartData.length > 0 ? (
-               <View style={{ gap: 16, marginTop: 16}}>
+               <View style={{ gap: 16, marginTop: 12}}>
                   {cartData.map((item) => (
                      <View key={item.id} style={styles.cartItem}>
                         <View style={styles.cartImageWrap}>
@@ -177,10 +179,14 @@ export default function BagPage({ navigation }) {
          {cartData.length > 0 && (
             <View style={styles.bottomActions}>
                <TouchableOpacity style={styles.clearBtn} onPress={clearCart}>
-                  <Text style={{ color: "#222", fontWeight: "bold" }}>🗑️ Bersihkan</Text>
+                     <Ionicons name="bag-remove-outline" size={24} color="black" />
+                  <Text style={{ color: "#222", fontWeight: "bold" }}>
+                     Bersihkan</Text>
                </TouchableOpacity>
                <TouchableOpacity style={styles.lendBtn} onPress={() => setIsLend(true)}>
-                  <Text style={{ color: "#fff", fontWeight: "bold" }}>📦 Pinjam ({cartData.length})</Text>
+                  <Ionicons name="bag-check-outline" size={24} color="white" />
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                     Pinjam ({cartData.length})</Text>
                </TouchableOpacity>
             </View>
          )}
@@ -188,7 +194,7 @@ export default function BagPage({ navigation }) {
          <Modal visible={isLend} transparent animationType="fade" onRequestClose={() => setIsLend(false)}>
             <View style={styles.modalOverlay}>
                <View style={styles.modalContent}>
-                  <Text style={{ fontSize: 22, fontWeight: "bold", textAlign: "center", marginVertical: 16 }}>Pilih Durasi Peminjaman</Text>
+                  <Text style={{ fontSize: 22, fontWeight: "bold", textAlign: "center", marginBottom: 16 }}>Pilih Durasi Peminjaman</Text>
                   <View style={styles.durationRow}>
                      {[1, 3, 5].map((d) => (
                         <TouchableOpacity
@@ -227,10 +233,12 @@ export default function BagPage({ navigation }) {
                   <Text style={{ color: "#dc2626", fontWeight: "bold", fontSize: 13, marginTop: 8, alignSelf: "flex-end" }}>** Batas Maximal 14 Hari</Text>
                   <View style={{ flexDirection: "row", gap: 12, marginTop: 24 }}>
                      <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsLend(false)}>
-                        <Text style={{ color: "#222", fontWeight: "bold" }}>❌ Batalkan</Text>
+                        <FontAwesome5 name="times-circle" size={20} color="black" />
+                        <Text style={{ color: "#222", fontWeight: "bold" }}>Batalkan</Text>
                      </TouchableOpacity>
                      <TouchableOpacity style={styles.confirmBtn} onPress={confirmLend} disabled={lendLoading}>
-                        <Text style={{ color: "#fff", fontWeight: "bold" }}>{lendLoading ? "Meminjam..." : "📦 Konfirmasi"}</Text>
+                        <Feather name="check-circle" size={20} color="white" />
+                        <Text style={{ color: "#fff", fontWeight: "bold" }}>{lendLoading ? "Meminjam..." : "Konfirmasi"}</Text>
                      </TouchableOpacity>
                   </View>
                </View>
@@ -298,7 +306,7 @@ const styles = StyleSheet.create({
       position: "absolute",
       left: 0,
       right: 0,
-      bottom: 32,
+      bottom: 72,
       paddingHorizontal: 16,
       zIndex: 10,
    },
@@ -308,6 +316,8 @@ const styles = StyleSheet.create({
       borderWidth: 2,
       borderColor: "#222",
       borderRadius: 8,
+      flexDirection: "row",
+      gap: 8,
       alignItems: "center",
       justifyContent: "center",
       paddingVertical: 14,
@@ -321,6 +331,8 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       paddingVertical: 14,
       marginLeft: 4,
+      flexDirection: "row",
+      gap: 8,
    },
    modalOverlay: {
       flex: 1,
@@ -372,6 +384,7 @@ const styles = StyleSheet.create({
       backgroundColor: "#f3f4f6",
       borderRadius: 8,
       paddingHorizontal: 16,
+      paddingVertical: 8,
       marginTop: 8,
       marginBottom: 4,
       borderWidth: 2,
@@ -401,6 +414,8 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       paddingVertical: 14,
       marginRight: 4,
+      flexDirection: "row",
+      gap: 8,
    },
    confirmBtn: {
       flex: 1,
@@ -410,5 +425,7 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       paddingVertical: 14,
       marginLeft: 4,
+      flexDirection: "row",
+      gap: 8,
    },
 });

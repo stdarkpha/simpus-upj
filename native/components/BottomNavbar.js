@@ -1,30 +1,36 @@
 import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 const menuData = [
-   { title: "utama", icon: "home-outline", route: "Dashboard", emoji: "🏠" },
-   { title: "buku", icon: "book-outline", route: "BookPage", emoji: "📚" },
-   { title: "tas", icon: "bag-outline", route: "BagPage", emoji: "👜" },
-   { title: "riwayat", icon: "time-outline", route: "HistoryPage", emoji: "🕑" },
-   { title: "akun", icon: "person-outline", route: "SettingPage", emoji: "👤" },
+   { title: "utama", icon: { name: "home", lib: AntDesign }, route: "Dashboard" },
+   { title: "buku", icon: { name: "book", lib: AntDesign }, route: "BookPage" },
+   { title: "tas", icon: { name: "bag-outline", lib: Ionicons }, route: "BagPage" },
+   { title: "riwayat", icon: { name: "history", lib: MaterialCommunityIcons }, route: "HistoryPage" },
+   { title: "akun", icon: { name: "user", lib: AntDesign }, route: "SettingPage" },
 ];
 
 export default function BottomNavbar({ navigation, status = "authenticated" }) {
    return (
       <View style={[styles.bottomNav, status === "unauthenticated" ? styles.bottomNavHidden : null]}>
-         {menuData.map((item, idx) => (
-            <TouchableOpacity
-               key={item.title}
-               style={idx === 2 ? styles.centerNavItem : styles.navItem}
-               activeOpacity={0.7}
-               onPress={() => {
-                  navigation?.navigate(item.route);
-               }}
-            >
-               <Text style={[styles.navIcon, idx === 2 ? styles.centerNavIcon : null]}>{item.emoji}</Text>
-               <Text style={[styles.navLabel, idx === 2 ? styles.centerNavLabel : null]}>{item.title}</Text>
-            </TouchableOpacity>
-         ))}
+         {menuData.map((item, idx) => {
+            const IconComponent = item.icon.lib;
+            return (
+               <TouchableOpacity
+                  key={item.title}
+                  style={idx === 2 ? styles.centerNavItem : styles.navItem}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                     navigation?.navigate(item.route);
+                  }}
+               >
+                  <IconComponent name={item.icon.name} size={idx === 2 ? 24 : 20} color={idx === 2 ? "#fff" : "#E7000B"} style={idx === 2 ? styles.centerNavIcon : styles.navIcon} />
+                  <Text style={[styles.navLabel, idx === 2 ? styles.centerNavLabel : null]}>{item.title}</Text>
+               </TouchableOpacity>
+            );
+         })}
       </View>
    );
 }
@@ -42,11 +48,6 @@ const styles = StyleSheet.create({
       paddingHorizontal: 16,
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
-      shadowColor: "#000",
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: -4 },
-      elevation: 8,
       zIndex: 20,
    },
    bottomNavHidden: {
@@ -65,6 +66,7 @@ const styles = StyleSheet.create({
    },
    navLabel: {
       fontSize: 12,
+      marginTop: 4,
       color: "#E7000B",
       fontWeight: "bold",
       textTransform: "capitalize",

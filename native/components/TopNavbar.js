@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import Icon from 'react-native-vector-icons/Ionicons'; // Uncomment if using vector icons
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function UserNavbar({ status = "authenticated", greetings = "Pagi", userData = { data: { name: "Nama Pengguna" } } }) {
    // Get user name from AsyncStorage if not provided in props
@@ -38,8 +38,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
                </View>
             </View>
             <View style={styles.notifIcon}>
-               {/* <Icon name="notifications-outline" size={28} color="#E7000B" /> */}
-               <Text style={{ fontSize: 24, color: "#E7000B" }}>🔔</Text>
+               <MaterialIcons name="notifications-none" size={32} color="#888" />
             </View>
          </View>
       </View>

@@ -81,7 +81,7 @@ export default function HistoryPage({ navigation }) {
    return (
       <View style={{ flex: 1, backgroundColor: "#fff" }}>
          {/* Red header background */}
-         <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+         <ScrollView contentContainerStyle={{ paddingBottom: 64 }}>
             <View style={styles.headerBg} />
             <View style={styles.headerContainer}>
                <Text style={styles.headerTitle}>Riwayat Pinjaman</Text>

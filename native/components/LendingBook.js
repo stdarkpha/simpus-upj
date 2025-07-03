@@ -88,10 +88,12 @@ export default function LendingBook({ navigation }) {
                            <Image source={{ uri: item.book.img }} style={styles.coverImg} resizeMode="cover" />
                         </View>
                         <View style={styles.infoWrap}>
-                           <Text style={styles.bookTitle} numberOfLines={2}>
-                              {item.book.title}
-                           </Text>
-                           <Text style={styles.bookAuthor}>Author: {item.book.author}</Text>
+                           <View>
+                              <Text style={styles.bookTitle} numberOfLines={2}>
+                                 {item.book.title}
+                              </Text>
+                              <Text style={styles.bookAuthor}>Author: {item.book.author}</Text>
+                           </View>
                            <View style={styles.progressBarBg}>
                               <View style={[styles.progressBar, { width: `${percentage}%` }]} />
                            </View>
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
    },
    progressBarBg: {
       height: 6,
-      backgroundColor: "#f3f4f6",
+      backgroundColor: "#dedede",
       borderRadius: 4,
       marginVertical: 4,
       width: "100%",

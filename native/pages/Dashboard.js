@@ -1,40 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, FlatList, View, Text, TextInput, TouchableOpacity, Image, Alert, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import LatestBookSection from "../components/LatestBookSection";
 import UserHomeCategory from "../components/UserHomeCategory";
 import LendingBook from "../components/LendingBook";
+import Feather from "@expo/vector-icons/Feather";
 
 export default function Dashboard({ onLogout, navigation }) {
-   const handleLogout = async () => {
-      try {
-         const userStr = await AsyncStorage.getItem("user");
-         const user = userStr ? JSON.parse(userStr) : null;
-         const token = user?.data?.token;
-         if (!token) {
-            Alert.alert("Logout Error", "Token tidak ditemukan.");
-            return;
-         }
-         const response = await fetch("https://besimpus.farouq.me/api/user/logout", {
-            method: "POST",
-            headers: {
-               Authorization: `Bearer ${token}`,
-               Accept: "application/json",
-               "Content-Type": "application/json",
-            },
-         });
-
-         if (response.ok) {
-            await AsyncStorage.removeItem("user");
-            if (onLogout) onLogout();
-         } else {
-            Alert.alert("Logout Gagal", "Gagal logout dari server.");
-         }
-      } catch (e) {
-         Alert.alert("Logout Error", "Terjadi kesalahan saat logout.");
-      }
-   };
-
    const sections = [
       {
          key: "header",
@@ -44,10 +15,20 @@ export default function Dashboard({ onLogout, navigation }) {
                <View style={styles.headerContainer}>
                   <Text style={styles.headerTitle}>Laman Utama</Text>
                   <Text style={styles.headerSubtitle}>Cari buku berdasarkan judul</Text>
-                  <TouchableOpacity style={styles.searchBar} activeOpacity={0.8}>
-                     <Text style={styles.searchIcon}>🔍</Text>
-                     <TextInput style={styles.searchInput} placeholder="Cari buku berdasarkan judul" placeholderTextColor="#888" />
-                     <Text style={styles.filterIcon}>⚙️</Text>
+                  <TouchableOpacity
+                     style={styles.searchBar}
+                     activeOpacity={0.8}
+                     onPress={() => {
+                        navigation.navigate("BookPage", { autoFocus: false }); // reset param
+                        setTimeout(() => {
+                           navigation.navigate("BookPage", { autoFocus: true });
+                        }, 10);
+                     }}
+                  >
+                     <Feather name="search" size={24} color="#dc2626" />
+                     {/* <TextInput style={styles.searchInput} placeholder="Cari buku berdasarkan judul" placeholderTextColor="#888" onFocus={() => navigation.navigate("BookPage")} onChangeText={() => navigation.navigate("BookPage")} /> */}
+                     <Text style={styles.searchInput}>Cari buku berdasarkan judul</Text>
+                     <Feather name="filter" size={24} color="#dc2626" />
                   </TouchableOpacity>
                   <View style={styles.card}>
                      <View style={styles.cardContent}>
@@ -92,14 +73,6 @@ export default function Dashboard({ onLogout, navigation }) {
             </View>
          ),
       },
-      {
-         key: "logout",
-         render: () => (
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-               <Text style={styles.logoutButtonText}>Log Out</Text>
-            </TouchableOpacity>
-         ),
-      },
    ];
 
    return (
@@ -110,7 +83,7 @@ export default function Dashboard({ onLogout, navigation }) {
 }
 
 const styles = StyleSheet.create({
-   container: { flex: 1 },
+   container: { flex: 1, },
    headerBg: {
       backgroundColor: "#E7000B",
       width: "100%",
@@ -156,6 +129,7 @@ const styles = StyleSheet.create({
       color: "#222",
       paddingVertical: 0,
       paddingHorizontal: 6,
+      opacity: 0.5,
    },
    filterIcon: {
       fontSize: 22,
@@ -167,7 +141,7 @@ const styles = StyleSheet.create({
       borderRadius: 12,
       padding: 16,
       paddingBottom: 32,
-      marginTop: 32,
+      marginTop: 40,
       shadowColor: "#000",
       shadowOpacity: 0.08,
       shadowRadius: 8,
@@ -207,13 +181,4 @@ const styles = StyleSheet.create({
    },
    sectionTitle: { fontSize: 20, fontWeight: "bold" },
    sectionLink: { color: "#dc2626", fontWeight: "bold" },
-   logoutButton: {
-      marginTop: 32,
-      alignSelf: "center",
-      backgroundColor: "#ef4444",
-      paddingVertical: 10,
-      paddingHorizontal: 32,
-      borderRadius: 8,
-   },
-   logoutButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });

@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
       flex: 1,
       backgroundColor: "#fff",
       position: "relative",
-      paddingVertical: 30,
+      paddingTop: 30,
       zIndex: 0, // Ensure navbar is above content
    },
    headerBg: {

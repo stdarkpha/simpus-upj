@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Image, ActivityIndicator, Dimensions } from "react-native";
+import { useRoute } from "@react-navigation/native";
 import debounce from "lodash.debounce";
 import BookDetailModal from "../components/BookDetailModal";
 
-const { width } = Dimensions.get("window");
+import Feather from "@expo/vector-icons/Feather";
 
 export default function BookPage({ navigation }) {
    const [query, setQuery] = useState("");
@@ -16,6 +17,20 @@ export default function BookPage({ navigation }) {
    const [page, setPage] = useState(1);
    const [hasMore, setHasMore] = useState(true);
    const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+   const inputRef = useRef(null);
+   const route = useRoute();
+
+   useEffect(() => {
+      if (route.params?.autoFocus) {
+         const timer = setTimeout(() => {
+            if (inputRef.current) {
+               inputRef.current.focus();
+            }
+         }, 300);
+         return () => clearTimeout(timer);
+      }
+   }, [route.params?.autoFocus]);
 
    const debouncedQuery = useMemo(
       () =>
@@ -108,15 +123,13 @@ export default function BookPage({ navigation }) {
             <Text style={styles.headerTitle}>Buku Perpustakaan</Text>
             <Text style={styles.headerSubtitle}>Cari buku berdasarkan judul</Text>
             <View style={styles.searchBar}>
-               <Text style={styles.searchIcon}>🔍</Text>
-               <TextInput style={styles.searchInput} placeholder="Cari buku berdasarkan judul" placeholderTextColor="#888" onChangeText={debouncedQuery} />
-               <Text style={styles.filterIcon}>⚙️</Text>
+               <Feather name="search" size={24} color="#dc2626" />
+               <TextInput ref={inputRef} style={styles.searchInput} placeholder="Cari buku berdasarkan judul" placeholderTextColor="#888" onChangeText={debouncedQuery} />
+               <Feather name="filter" size={24} color="#dc2626" />
             </View>
          </View>
          <View style={styles.sectionTitleWrap}>
-            <Text style={styles.sectionTitle}>
-               {query.length > 2 ? `Hasil Pencarian "${query}"` : "Buku Terbaru"}
-            </Text>
+            <Text style={styles.sectionTitle}>{query.length > 2 ? `Hasil Pencarian "${query}"` : "Buku Terbaru"}</Text>
          </View>
          {query.length > 2 ? (
             loading ? (
@@ -261,7 +274,7 @@ const styles = StyleSheet.create({
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 16,
-      marginTop: 16,
+      marginTop: 24,
       marginBottom: 8,
    },
    sectionTitle: {

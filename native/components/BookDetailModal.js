@@ -1,6 +1,7 @@
-import React, { useRef } from "react";
-import { Modal, View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Dimensions, Alert } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Modal, View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Dimensions, Alert, BackHandler } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function BookDetailModal({ visible, onClose, item, loading, setLoading }) {
    // Use state for available state
@@ -68,18 +69,18 @@ export default function BookDetailModal({ visible, onClose, item, loading, setLo
    }, [item, loading, setLoading, isAvailable, addCartLoading]);
 
    return (
-      <Modal visible={visible} animationType="slide" transparent>
+      <Modal visible={visible} onRequestClose={onClose} animationType="slide" transparent>
          <View style={styles.overlay}>
             {/* Top Navbar */}
             {item ? (
                <>
                   <View style={styles.topBar}>
                      <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
-                        <Text style={styles.iconText}>⬅️</Text>
+                        <AntDesign name="arrowleft" size={24} color="black" />
                      </TouchableOpacity>
-                     <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
+                     {/* <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
                         <Text style={styles.iconText}>🔖</Text>
-                     </TouchableOpacity>
+                     </TouchableOpacity> */}
                   </View>
                   {/* Main Content */}
                   <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -258,7 +259,6 @@ const styles = StyleSheet.create({
       marginBottom: 2,
    },
    gridValue: {
-      fontWeight: "bold",
       color: "#dc2626",
       fontSize: 15,
       textTransform: "capitalize",
