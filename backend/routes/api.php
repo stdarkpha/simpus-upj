@@ -6,7 +6,8 @@ use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\BooksController;
 use App\Http\Controllers\Api\LendingController;
 use App\Http\Controllers\Api\NotificationController;
-
+use App\Http\Controllers\Api\NotificationStreamController;
+use App\Http\Controllers\Api\TestController;
 
 Route::post('/user/register', [UserController::class, 'registerMahasiswa']);
 Route::post('/user/login', [UserController::class, 'login']);
@@ -82,5 +83,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('notifications')->group(function () {
         // Get user notifications
         Route::get('/', [NotificationController::class, 'index']);
+        // Mark notification as read
+        Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
+        // Mark all notifications as read
+        Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
+        // Get unread count
+        Route::get('/unread-count', [NotificationController::class, 'getUnreadCount']);
     });
+
+    // Test Pusher functionality
+    Route::post('/test/pusher', [TestController::class, 'testPusher']);
+    Route::post('/test/log-broadcast', [TestController::class, 'testLogBroadcast']);
+    Route::post('/test/sse', [TestController::class, 'testSSE']);
+    Route::get('/notifications/stream', [NotificationStreamController::class, 'stream']);
 });

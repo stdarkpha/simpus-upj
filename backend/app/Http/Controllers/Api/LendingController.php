@@ -243,13 +243,15 @@ class LendingController extends Controller
             DB::commit();
 
             // Create notification for successful lending
-            Notification::create([
+            $notification = Notification::create([
                 'user_id' => $user_id,
                 'type' => 'lending',
                 'title' => 'Lending ' . now()->format('Y-m-d H:i:s') . ' success',
                 'desc' => 'Your book lending success you can go to library to verify the book lending',
                 'variant' => 'success'
             ]);
+
+            // Note: Real-time notification will be delivered via SSE when user polls /notifications/stream
 
             return response()->json([
                 'success' => true,
