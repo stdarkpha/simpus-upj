@@ -13,15 +13,16 @@ class Notification extends Model
         'user_id',
         'type',
         'title',
-        'desc',
+        'message',
+        'data',
         'timestamp',
-        'variant',
         'is_read'
     ];
 
     protected $casts = [
         'timestamp' => 'datetime',
         'is_read' => 'boolean',
+        'data' => 'array',
     ];
 
     // Relationship with User

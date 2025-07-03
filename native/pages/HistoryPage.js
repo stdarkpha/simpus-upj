@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Modal, TextInput, Dimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Pusher from "pusher-js";
 import Config from "../config";
 
 const { width } = Dimensions.get("window");
@@ -22,16 +24,45 @@ function formatDate(dateString) {
    });
 }
 
+function getStatusColor(status) {
+   switch (status) {
+      case "pending":
+         return "#ca8a04"; // yellow-600
+      case "claim":
+         return "#2563eb"; // blue-600
+      case "returned":
+         return "#059669"; // green-600
+      case "overdue":
+         return "#ea580c"; // orange-600
+      case "reject":
+         return "#dc2626"; // red-600
+      default:
+         return "#4b5563"; // gray-600
+   }
+}
+
 export default function HistoryPage({ navigation }) {
    const [historyData, setHistoryData] = useState([]);
    const [loading, setLoading] = useState(true);
+   const [refreshing, setRefreshing] = useState(false);
+   const [isConnected, setIsConnected] = useState(false);
+   const [lastUpdate, setLastUpdate] = useState(null);
    const [selectedItem, setSelectedItem] = useState(null);
    const [showQR, setShowQR] = useState(false);
    const [qrData, setQRData] = useState(null);
    const [dateFilter, setDateFilter] = useState("");
 
-   const fetchHistory = async () => {
-      setLoading(true);
+   // Pusher WebSocket refs
+   const pusherRef = useRef(null);
+   const channelRef = useRef(null);
+   const userDataRef = useRef(null);
+
+   const fetchHistory = async (isRefresh = false) => {
+      if (isRefresh) {
+         setRefreshing(true);
+      } else {
+         setLoading(true);
+      }
       try {
          const userStr = await AsyncStorage.getItem("user");
          const user = userStr ? JSON.parse(userStr) : null;
@@ -49,11 +80,106 @@ export default function HistoryPage({ navigation }) {
       } catch (e) {
          setHistoryData([]);
       }
-      setLoading(false);
+      if (isRefresh) {
+         setRefreshing(false);
+      } else {
+         setLoading(false);
+      }
+   };
+
+   // Initialize Pusher WebSocket for real-time updates
+   const initializePusher = async () => {
+      try {
+         // console.log("🚀 [HistoryPage] Initializing Pusher...");
+
+         // Get user data and token from AsyncStorage
+         const userStr = await AsyncStorage.getItem("user");
+         const user = userStr ? JSON.parse(userStr) : null;
+
+         if (!user?.data?.id) {
+            console.warn("⚠️ [HistoryPage] No user data found, skipping Pusher initialization");
+            return;
+         }
+
+         userDataRef.current = user;
+         // console.log("🆔 [HistoryPage] User ID found:", user.data.id);
+
+         // Initialize Pusher
+         pusherRef.current = new Pusher(Config.PUSHER_KEY, {
+            cluster: Config.PUSHER_CLUSTER,
+            forceTLS: true,
+            enabledTransports: ["ws", "wss"],
+         });
+
+         const channelName = `user.${user.data.id}`;
+         // console.log("📡 [HistoryPage] Subscribing to channel:", channelName);
+
+         channelRef.current = pusherRef.current.subscribe(channelName);
+
+         // Listen for notification events that should trigger history refresh
+         channelRef.current.bind("notification.created", (data) => {
+            // console.log("🔔 [HistoryPage] Notification received:", data);
+            // console.log("🔄 [HistoryPage] Refreshing history due to new notification...");
+
+            // Close any open modals to show updated data
+            setSelectedItem(null);
+            setShowQR(false);
+
+            // Update last update timestamp
+            setLastUpdate(new Date().toLocaleTimeString());
+
+            // Show a brief visual feedback that new data is coming
+            setTimeout(() => {
+               fetchHistory(true); // Refresh history when notification is received (with refresh indicator)
+            }, 500); // Small delay to show the refresh indicator
+         });
+
+         pusherRef.current.connection.bind("connected", () => {
+            console.log("✅ [HistoryPage] Pusher connected successfully!");
+            setIsConnected(true);
+         });
+
+         pusherRef.current.connection.bind("disconnected", () => {
+            console.log("🔌 [HistoryPage] Pusher disconnected");
+            setIsConnected(false);
+         });
+
+         pusherRef.current.connection.bind("error", (error) => {
+            console.error("❌ [HistoryPage] Pusher connection error:", error);
+            setIsConnected(false);
+         });
+      } catch (error) {
+         console.error("💥 [HistoryPage] Failed to initialize Pusher:", error);
+      }
+   };
+
+   // Cleanup Pusher connections
+   const cleanup = () => {
+      console.log("🧹 [HistoryPage] Cleaning up Pusher connections...");
+
+      setIsConnected(false);
+      setLastUpdate(null);
+
+      if (channelRef.current) {
+         channelRef.current.unbind_all();
+         channelRef.current.unsubscribe();
+         channelRef.current = null;
+      }
+
+      if (pusherRef.current) {
+         pusherRef.current.disconnect();
+         pusherRef.current = null;
+      }
    };
 
    useEffect(() => {
       fetchHistory();
+      initializePusher();
+
+      // Cleanup function
+      return () => {
+         cleanup();
+      };
    }, [dateFilter]);
 
    // Fetch QR code for selected item
@@ -85,8 +211,18 @@ export default function HistoryPage({ navigation }) {
          <ScrollView contentContainerStyle={{ paddingBottom: 64 }}>
             <View style={styles.headerBg} />
             <View style={styles.headerContainer}>
-               <Text style={styles.headerTitle}>Riwayat Pinjaman</Text>
-               <Text style={styles.headerSubtitle}>Filter riwayat dengan tanggal</Text>
+               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <View>
+                     <Text style={styles.headerTitle}>Riwayat Pinjaman</Text>
+                     <Text style={styles.headerSubtitle}>Filter riwayat dengan tanggal</Text>
+                  </View>
+                  {/* Connection status indicator */}
+                  <View style={[styles.connectionStatus, { backgroundColor: isConnected ? "#059669" : "#6b7280" }]}>
+                     <MaterialIcons name="wifi" size={16} color="#fff" />
+                     <Text style={styles.connectionText}>{isConnected ? "Live" : "Offline"}</Text>
+                     {lastUpdate && isConnected && <Text style={styles.lastUpdateText}>• {lastUpdate}</Text>}
+                  </View>
+               </View>
                {/* Date Filter */}
                <View style={styles.searchBar}>
                   <Text style={styles.searchIcon}>📅</Text>
@@ -95,7 +231,20 @@ export default function HistoryPage({ navigation }) {
             </View>
             <View style={styles.sectionTitleWrap}>
                <Text style={styles.sectionTitle}>Daftar Riwayat</Text>
-               <Text style={styles.sectionTotal}>Total: {historyData.length}</Text>
+               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  {!refreshing && (
+                     <TouchableOpacity style={[styles.refreshBtn, refreshing && styles.refreshBtnDisabled]} onPress={() => fetchHistory(true)}>
+                        <MaterialIcons name="refresh" size={18} color={refreshing ? "#9ca3af" : "#fff"} />
+                     </TouchableOpacity>
+                  )}
+                  {refreshing && (
+                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                        <ActivityIndicator size="small" color="#dc2626" />
+                        <Text style={styles.refreshingText}>Memperbarui...</Text>
+                     </View>
+                  )}
+                  {!refreshing && <Text style={styles.sectionTotal}>Total: {historyData.length}</Text>}
+               </View>
             </View>
             {loading ? (
                <View style={{ alignItems: "center", marginTop: 32 }}>
@@ -115,7 +264,7 @@ export default function HistoryPage({ navigation }) {
                      >
                         <View style={styles.historyCardRow}>
                            <Text style={styles.historyId}>{item.transaction_id}</Text>
-                           <Text style={styles.historyStatus}>{statusMapping[item.status] || item.status}</Text>
+                           <Text style={[styles.historyStatus, { backgroundColor: getStatusColor(item.status) }]}>{statusMapping[item.status] || item.status}</Text>
                         </View>
                         {/* <View style={styles.historyBooksWrap}>
                            {item.compact.map((data, idx) => (
@@ -168,7 +317,7 @@ export default function HistoryPage({ navigation }) {
                      <>
                         <View style={styles.modalHeader}>
                            <Text style={styles.historyId}>{selectedItem.transaction_id}</Text>
-                           <Text style={styles.historyStatus}>{statusMapping[selectedItem.status] || selectedItem.status}</Text>
+                           <Text style={[styles.historyStatus, { backgroundColor: getStatusColor(selectedItem.status) }]}>{statusMapping[selectedItem.status] || selectedItem.status}</Text>
                         </View>
                         <View style={styles.historyBooksWrap}>
                            {selectedItem.compact.map((data, idx) => (
@@ -295,6 +444,40 @@ const styles = StyleSheet.create({
       color: "#dc2626",
       fontSize: 16,
    },
+   refreshingText: {
+      fontSize: 12,
+      color: "#dc2626",
+      fontWeight: "600",
+   },
+   refreshBtn: {
+      backgroundColor: "#dc2626",
+      borderRadius: 16,
+      width: 32,
+      height: 32,
+      alignItems: "center",
+      justifyContent: "center",
+   },
+   refreshBtnDisabled: {
+      backgroundColor: "#e5e7eb",
+   },
+   connectionStatus: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      gap: 4,
+   },
+   connectionText: {
+      color: "#fff",
+      fontSize: 12,
+      fontWeight: "bold",
+   },
+   lastUpdateText: {
+      color: "#fff",
+      fontSize: 10,
+      opacity: 0.8,
+   },
    historyCard: {
       backgroundColor: "#fff",
       borderRadius: 12,
@@ -319,7 +502,6 @@ const styles = StyleSheet.create({
       fontSize: 15,
    },
    historyStatus: {
-      backgroundColor: "#dc2626",
       color: "#fff",
       paddingHorizontal: 8,
       paddingVertical: 4,

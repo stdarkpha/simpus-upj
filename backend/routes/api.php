@@ -83,6 +83,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('notifications')->group(function () {
         // Get user notifications
         Route::get('/', [NotificationController::class, 'index']);
+        // Create notification
+        Route::post('/', [NotificationController::class, 'create']);
         // Mark notification as read
         Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
         // Mark all notifications as read
@@ -92,8 +94,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Test Pusher functionality
-    Route::post('/test/pusher', [TestController::class, 'testPusher']);
-    Route::post('/test/log-broadcast', [TestController::class, 'testLogBroadcast']);
-    Route::post('/test/sse', [TestController::class, 'testSSE']);
+    // Route::post('/test/pusher', [TestController::class, 'testPusher']);
+    // Route::get('/test/connection', [TestController::class, 'testConnection']);
+    // Route::get('/test/channel-info', [TestController::class, 'getChannelInfo']);
     Route::get('/notifications/stream', [NotificationStreamController::class, 'stream']);
 });

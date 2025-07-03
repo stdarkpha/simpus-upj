@@ -8,6 +8,8 @@ export default defineNuxtConfig({
       BASE_URL: process.env.BASE_URL,
       API_URL: process.env.API_URL,
       API_BASE_URL: process.env.API_BASE_URL,
+      PUSHER_KEY: process.env.PUSHER_KEY || '668d263d6e1fb690800d',
+      PUSHER_CLUSTER: process.env.PUSHER_CLUSTER || 'ap1',
     }
   },
 

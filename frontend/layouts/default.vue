@@ -29,11 +29,7 @@
                      <Icon icon="akar-icons:bell" class="w-full h-full text-red-600" />
                      <!-- Notification Badge -->
                   </div>
-                  <!-- Debug Test Button (remove in production) -->
-                  <button @click="testPusherNotification"
-                     class="absolute -bottom-8 right-0 text-xs bg-green-500 text-white px-2 py-1 rounded">
-                     Test
-                  </button>
+
                </div>
             </div>
          </nav>
@@ -50,8 +46,7 @@
             leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 translate-y-[-100%]">
 
-            <div v-if="showNotifications"
-               class="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
+            <div v-if="showNotifications" class="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
 
                <!-- Header -->
                <div class="flex items-center justify-between p-4 border-b">
@@ -75,20 +70,19 @@
 
                         <div class="flex items-start gap-3">
                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" :class="{
-                              'bg-green-100 text-green-600': notification.variant === 'success',
-                              'bg-yellow-100 text-yellow-600': notification.variant === 'warning',
-                              'bg-red-100 text-red-600': notification.variant === 'error'
+                              'bg-green-100 text-green-600': notification.type === 'success',
+                              'bg-yellow-100 text-yellow-600': notification.type === 'warning',
+                              'bg-red-100 text-red-600': notification.type === 'error',
+                              'bg-blue-100 text-blue-600': notification.type === 'info'
                            }">
-                              <Icon v-if="notification.type === 'lending'" icon="material-symbols:book-outline"
-                                 class="w-4 h-4" />
-                              <Icon v-else icon="akar-icons:bell" class="w-4 h-4" />
+                              <Icon icon="akar-icons:bell" class="w-4 h-4" />
                            </div>
 
                            <div class="flex-1 min-w-0">
                               <h4 class="font-medium text-gray-900 truncate">{{ notification.title }}</h4>
-                              <p class="text-sm text-gray-600 mt-1">{{ notification.desc }}</p>
+                              <p class="text-sm text-gray-600 mt-1">{{ notification.message }}</p>
                               <p class="text-xs text-gray-400 mt-2">
-                                 {{ formatDate(notification.created_at) }}
+                                 {{ formatDate(notification.timestamp ?? '') }}
                               </p>
                            </div>
 
@@ -142,8 +136,7 @@
 
 <script lang="ts" setup>
 import { motion } from 'motion-v'
-// Remove Pusher import since we're using SSE now
-// import Pusher from 'pusher-js'
+import Pusher from 'pusher-js'
 
 const { data, status } = useAuth()
 const config = useRuntimeConfig()
@@ -152,11 +145,11 @@ const config = useRuntimeConfig()
 interface Notification {
    id: number
    user_id: number
-   type: 'lending' | 'returning' | 'reminder'
+   type: 'info' | 'success' | 'warning' | 'error'
    title: string
-   desc: string
+   message: string
+   data?: any
    timestamp?: string
-   variant: 'success' | 'warning' | 'error'
    is_read: boolean
    created_at: string
 }
@@ -173,6 +166,10 @@ const notifications = ref<Notification[]>([])
 const unreadCount = ref<number>(0)
 const showNotifications = ref<boolean>(false)
 
+// Pusher connection
+let pusher: Pusher | null = null
+let notificationChannel: any = null
+
 const greetings = computed(() => {
    const hour = new Date().getHours()
    if (hour < 10) return 'Pagi'
@@ -181,91 +178,84 @@ const greetings = computed(() => {
    return 'Malam'
 })
 
-console.log('User data:', data.value?.data.id)
-
 // Toggle notifications panel
 const toggleNotifications = () => {
    showNotifications.value = !showNotifications.value
 }
 const { token } = useAuth();
 
-// SSE connection for real-time notifications
-let eventSource: EventSource | null = null
-let lastNotificationId = 0
-
-// Initialize Server-Sent Events for real-time notifications
-const initializeSSE = () => {
-   console.log('🚀 Initializing Server-Sent Events...')
+// Initialize Pusher for real-time notifications
+const initializePusher = () => {
+   console.log('🚀 Initializing Pusher...')
    console.log('User data:', data?.value?.data)
    console.log('User ID:', data?.value?.data?.id)
 
    if (!data?.value?.data?.id) {
-      console.warn('❌ Cannot initialize SSE: User ID not found')
+      console.warn('❌ Cannot initialize Pusher: User ID not found')
       return
    }
 
    try {
       // Close existing connection if any
-      if (eventSource) {
-         eventSource.close()
+      if (pusher) {
+         pusher.disconnect()
       }
 
-      const sseUrl = `${config.public.API_URL}/notifications/stream?last_id=${lastNotificationId}`
-      console.log('📡 Creating SSE connection to:', sseUrl)
-
-      eventSource = new EventSource(sseUrl)
-
-      eventSource.onopen = () => {
-         console.log('✅ SSE connection opened successfully!')
-      }
-
-      eventSource.onmessage = (event) => {
-         try {
-            const data = JSON.parse(event.data)
-            console.log('📨 SSE message received:', data)
-
-            // Skip heartbeat messages
-            if (data.type === 'heartbeat') {
-               console.log('💓 Heartbeat received')
-               return
+      // Initialize Pusher
+      pusher = new Pusher(config.public.PUSHER_KEY, {
+         cluster: config.public.PUSHER_CLUSTER,
+         // encrypted: true,
+         authEndpoint: `${config.public.API_URL}/broadcasting/auth`,
+         auth: {
+            headers: {
+               Authorization: `Bearer ${token.value}`,
+               Accept: 'application/json'
             }
-
-            // Handle notification data
-            if (data.id && data.title) {
-               console.log('🔔 NEW NOTIFICATION RECEIVED via SSE!')
-               console.log('📨 Notification data:', data)
-
-               // Update last notification ID
-               lastNotificationId = Math.max(lastNotificationId, data.id)
-
-               // Add notification to the list
-               notifications.value.unshift({
-                  ...data,
-                  is_read: false
-               })
-
-               // Update unread count
-               unreadCount.value = notifications.value.filter((n: Notification) => !n.is_read).length
-               console.log('📊 Updated unread count:', unreadCount.value)
-
-               // Show toast notification
-               showNotificationToast(data)
-            }
-
-         } catch (error) {
-            console.error('❌ Error parsing SSE message:', error)
          }
-      }
+      })
 
-      eventSource.onerror = (error) => {
-         console.error('❌ SSE connection error:', error)
-         console.log('🔄 SSE will automatically reconnect...')
-      }
+      // Connect to user-specific channel
+      const channelName = `user.${data.value.data.id}`
+      console.log('📡 Subscribing to channel:', channelName)
 
-      console.log('🎯 SSE setup completed')
+      notificationChannel = pusher.subscribe(channelName)
+
+      // Handle connection state
+      pusher.connection.bind('connected', () => {
+         console.log('✅ Pusher connected successfully!')
+      })
+
+      pusher.connection.bind('disconnected', () => {
+         console.log('� Pusher disconnected')
+      })
+
+      pusher.connection.bind('error', (error: any) => {
+         console.error('❌ Pusher connection error:', error)
+      })
+
+      // Listen for notification events
+      notificationChannel.bind('notification.created', (data: Notification) => {
+         // console.log('🔔 NEW NOTIFICATION RECEIVED via Pusher!')
+         console.log('📨 Notification data:', data)
+
+         // Add notification to the list
+         notifications.value.unshift({
+            ...data,
+            is_read: false
+         })
+
+         // Update unread count
+         unreadCount.value = notifications.value.filter((n: Notification) => !n.is_read).length
+         console.log('📊 Updated unread count:', unreadCount.value)
+
+         // Show toast notification
+         showNotificationToast(data)
+      })
+
+      console.log('🎯 Pusher setup completed')
 
    } catch (error: any) {
-      console.error('💥 Failed to initialize SSE:', error)
+      console.error('💥 Failed to initialize Pusher:', error)
    }
 }
 
@@ -275,7 +265,7 @@ const startPolling = () => {
 
    const pollInterval = setInterval(async () => {
       try {
-         const response = await $fetch<NotificationResponse>(`/notifications?since=${lastNotificationId}`, {
+         const response = await $fetch<NotificationResponse>(`/notifications`, {
             baseURL: config.public.API_URL,
             headers: {
                'Authorization': `Bearer ${token.value}`,
@@ -284,25 +274,27 @@ const startPolling = () => {
          })
 
          if (response.success && response.data.length > 0) {
-            console.log('📨 New notifications via polling:', response.data.length)
+            console.log('📨 Checking notifications via polling')
 
-            response.data.forEach((notification: Notification) => {
-               lastNotificationId = Math.max(lastNotificationId, notification.id)
+            // Update notifications if new ones are found
+            const existingIds = notifications.value.map(n => n.id)
+            const newNotifications = response.data.filter(n => !existingIds.includes(n.id))
 
-               // Check if notification already exists
-               const exists = notifications.value.find(n => n.id === notification.id)
-               if (!exists) {
+            if (newNotifications.length > 0) {
+               console.log('📨 New notifications via polling:', newNotifications.length)
+               newNotifications.forEach((notification: Notification) => {
                   notifications.value.unshift(notification)
-                  showNotificationToast(notification)
-               }
-            })
-
-            unreadCount.value = notifications.value.filter((n: Notification) => !n.is_read).length
+                  if (!notification.is_read) {
+                     showNotificationToast(notification)
+                  }
+               })
+               unreadCount.value = notifications.value.filter((n: Notification) => !n.is_read).length
+            }
          }
       } catch (error) {
          console.error('❌ Polling error:', error)
       }
-   }, 10000) // Poll every 10 seconds
+   }, 30000) // Poll every 30 seconds
 
    // Cleanup polling on unmount
    onBeforeUnmount(() => {
@@ -316,14 +308,14 @@ const showNotificationToast = (notification: Notification) => {
    // For now, we'll use a simple browser notification if supported
    if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(notification.title, {
-         body: notification.desc,
+         body: notification.message,
          icon: '/logo.png'
       })
    } else if ('Notification' in window && Notification.permission !== 'denied') {
       Notification.requestPermission().then((permission) => {
          if (permission === 'granted') {
             new Notification(notification.title, {
-               body: notification.desc,
+               body: notification.message,
                icon: '/logo.png'
             })
          }
@@ -388,17 +380,18 @@ const markAllAsRead = async (): Promise<void> => {
       if (response.success) {
          notifications.value.forEach((n: Notification) => n.is_read = true)
          unreadCount.value = 0
+         showNotifications.value = false
       }
    } catch (error: any) {
       console.error('Failed to mark all notifications as read:', error)
    }
 }
 
-// Test SSE notification (for debugging)
+// Test Pusher notification (for debugging)
 const testPusherNotification = async (): Promise<void> => {
-   console.log('🧪 Testing SSE notification...')
+   console.log('🧪 Testing Pusher notification...')
    try {
-      const response = await $fetch<{ success: boolean; message: string }>('/test/sse', {
+      const response = await $fetch<{ success: boolean; message: string }>('/test/pusher', {
          method: 'POST',
          baseURL: config.public.API_URL,
          headers: {
@@ -409,7 +402,7 @@ const testPusherNotification = async (): Promise<void> => {
 
       console.log('🧪 Test response:', response)
       if (response.success) {
-         console.log('✅ Test notification created - check SSE connection for real-time update')
+         console.log('✅ Test notification created - check Pusher connection for real-time update')
       }
    } catch (error: any) {
       console.error('❌ Failed to create test notification:', error)
@@ -417,9 +410,7 @@ const testPusherNotification = async (): Promise<void> => {
 }
 
 onMounted(async () => {
-   console.log('🚀 Component mounted!')
-   console.log('📊 Auth status:', status.value)
-   console.log('👤 User data on mount:', data.value?.data)
+
 
    const handleScroll = () => {
       if (window.scrollY > 0) {
@@ -432,34 +423,26 @@ onMounted(async () => {
    // Call once to set initial state
    handleScroll()
 
-   console.log('📥 Loading notifications...')
-   await loadNotifications()
 
-   // Set last notification ID from loaded notifications
-   if (notifications.value.length > 0) {
-      lastNotificationId = Math.max(...notifications.value.map(n => n.id))
-   }
+   await loadNotifications()
 
    // Wait a bit to ensure user data is fully loaded
    await new Promise(resolve => setTimeout(resolve, 500))
 
-   console.log('🔌 Initializing real-time notifications...')
-   console.log('👤 Final user check before init:', data.value?.data)
-
-   // Try SSE first, fallback to polling if it fails
+   // Try Pusher first, fallback to polling if it fails
    try {
-      initializeSSE()
+      initializePusher()
       // Also start polling as a backup
-      setTimeout(() => startPolling(), 5000)
+      // setTimeout(() => startPolling(), 5000)
    } catch (error) {
-      console.error('❌ SSE failed, using polling only:', error)
+      console.error('❌ Pusher failed, using polling only:', error)
       startPolling()
    }
 
    // Cleanup connections on unmount
    onBeforeUnmount(() => {
-      if (eventSource) {
-         eventSource.close()
+      if (pusher) {
+         pusher.disconnect()
       }
    })
 })

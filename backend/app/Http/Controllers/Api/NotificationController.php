@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use Pusher\Pusher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
+
     /**
      * Get notifications for the authenticated user
      */
@@ -114,6 +117,96 @@ class NotificationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to get unread count',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create a new notification and send via Pusher
+     */
+    public function create(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'type' => 'required|in:info,success,warning,error',
+                'title' => 'required|string|max:255',
+                'message' => 'required|string',
+                'data' => 'nullable|array'
+            ]);
+
+            // Create notification in database
+            $notification = Notification::create([
+                'user_id' => $request->user_id,
+                'type' => $request->type,
+                'title' => $request->title,
+                'message' => $request->message,
+                'data' => $request->data,
+                'timestamp' => now(),
+                'is_read' => false
+            ]);
+
+            Log::info('Notification created in database', ['notification_id' => $notification->id]);
+
+            // Send notification via Pusher
+            $pusherData = [
+                'id' => $notification->id,
+                'type' => $notification->type,
+                'title' => $notification->title,
+                'message' => $notification->message,
+                'data' => $notification->data,
+                'timestamp' => $notification->timestamp->toISOString(),
+                'is_read' => false
+            ];
+
+            $pusherSent = false;
+            try {
+                $pusher = new Pusher(
+                    env('PUSHER_APP_KEY'),
+                    env('PUSHER_APP_SECRET'),
+                    env('PUSHER_APP_ID'),
+                    [
+                        'cluster' => env('PUSHER_APP_CLUSTER'),
+                        'useTLS' => true,
+                    ]
+                );
+                
+                $channel = "user.{$request->user_id}";
+                $event = 'notification.created';
+                
+                $result = $pusher->trigger($channel, $event, $pusherData);
+                $pusherSent = true;
+                
+                Log::info('Pusher notification sent successfully', [
+                    'user_id' => $request->user_id,
+                    'notification_id' => $notification->id,
+                    'channel' => $channel,
+                    'result' => $result
+                ]);
+            } catch (\Exception $pusherError) {
+                Log::error('Failed to send Pusher notification', [
+                    'user_id' => $request->user_id,
+                    'notification_id' => $notification->id,
+                    'error' => $pusherError->getMessage()
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $notification,
+                'pusher_sent' => $pusherSent,
+                'message' => 'Notification created and sent successfully'
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create notification', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create notification',
                 'error' => $e->getMessage()
             ], 500);
         }

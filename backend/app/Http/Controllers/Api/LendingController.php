@@ -8,9 +8,11 @@ use App\Models\Lending;
 use App\Models\LendingCart;
 use App\Models\LendingItem;
 use App\Models\Notification;
+use Pusher\Pusher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Helpers\QrCodeHelper;
@@ -245,13 +247,60 @@ class LendingController extends Controller
             // Create notification for successful lending
             $notification = Notification::create([
                 'user_id' => $user_id,
-                'type' => 'lending',
-                'title' => 'Lending ' . now()->format('Y-m-d H:i:s') . ' success',
-                'desc' => 'Your book lending success you can go to library to verify the book lending',
-                'variant' => 'success'
+                'type' => 'success',
+                'title' => 'Lending Berhasil',
+                'message' => 'Peminjaman buku berhasil. Silakan datang ke perpustakaan untuk verifikasi.',
+                'data' => [
+                    'lending_id' => $lending->id,
+                    'lending_date' => $lending->lending_date,
+                    'books_count' => count($cartItems)
+                ],
+                'timestamp' => now(),
+                'is_read' => false
             ]);
 
-            // Note: Real-time notification will be delivered via SSE when user polls /notifications/stream
+            Log::info('Lending notification created', ['notification_id' => $notification->id, 'user_id' => $user_id]);
+
+            // Send real-time notification via Pusher
+            $pusherData = [
+                'id' => $notification->id,
+                'type' => $notification->type,
+                'title' => $notification->title,
+                'message' => $notification->message,
+                'data' => $notification->data,
+                'timestamp' => $notification->timestamp->toISOString(),
+                'is_read' => false
+            ];
+
+            try {
+                $pusher = new Pusher(
+                    env('PUSHER_APP_KEY'),
+                    env('PUSHER_APP_SECRET'),
+                    env('PUSHER_APP_ID'),
+                    [
+                        'cluster' => env('PUSHER_APP_CLUSTER'),
+                        'useTLS' => true,
+                    ]
+                );
+
+                $channel = "user.{$user_id}";
+                $event = 'notification.created';
+
+                $result = $pusher->trigger($channel, $event, $pusherData);
+
+                Log::info('Pusher notification sent successfully', [
+                    'user_id' => $user_id,
+                    'notification_id' => $notification->id,
+                    'channel' => $channel,
+                    'result' => $result
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send Pusher notification', [
+                    'user_id' => $user_id,
+                    'notification_id' => $notification->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -441,11 +490,71 @@ class LendingController extends Controller
                 $lending->status = 'reject';
                 $lending->save();
 
+                // Create notification for rejected lending
+                $notification = Notification::create([
+                    'user_id' => $lending->user_id,
+                    'type' => 'error',
+                    'title' => 'Peminjaman Ditolak',
+                    'message' => 'Peminjaman buku Anda telah ditolak oleh admin.',
+                    'data' => [
+                        'lending_id' => $lending->id,
+                        'transaction_id' => $lending->transaction_id,
+                        'action' => 'rejected'
+                    ],
+                    'timestamp' => now(),
+                    'is_read' => false
+                ]);
+
+                Log::info('Lending rejection notification created', ['notification_id' => $notification->id, 'user_id' => $lending->user_id]);
+
+                // Send real-time notification via Pusher
+                $pusherData = [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->title,
+                    'message' => $notification->message,
+                    'data' => $notification->data,
+                    'timestamp' => $notification->timestamp->toISOString(),
+                    'is_read' => false
+                ];
+
+                try {
+                    $pusher = new Pusher(
+                        env('PUSHER_APP_KEY'),
+                        env('PUSHER_APP_SECRET'),
+                        env('PUSHER_APP_ID'),
+                        [
+                            'cluster' => env('PUSHER_APP_CLUSTER'),
+                            'useTLS' => true,
+                        ]
+                    );
+
+                    $channel = "user.{$lending->user_id}";
+                    $event = 'notification.created';
+
+                    $result = $pusher->trigger($channel, $event, $pusherData);
+
+                    Log::info('Pusher rejection notification sent successfully', [
+                        'user_id' => $lending->user_id,
+                        'notification_id' => $notification->id,
+                        'channel' => $channel,
+                        'result' => $result
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send Pusher rejection notification', [
+                        'user_id' => $lending->user_id,
+                        'notification_id' => $notification->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Lending has been rejected.',
                 ]);
             }
+
+            $originalStatus = $lending->status;
 
             switch ($lending->status) {
                 case 'pending':
@@ -463,15 +572,110 @@ class LendingController extends Controller
             }
             $lending->save();
 
+            // Create notification based on the status change
+            $notification = null;
+            if ($originalStatus === 'pending' && $lending->status === 'claim') {
+                // Approved notification
+                $notification = Notification::create([
+                    'user_id' => $lending->user_id,
+                    'type' => 'success',
+                    'title' => 'Peminjaman Disetujui',
+                    'message' => 'Peminjaman buku Anda telah disetujui. Silakan ambil buku di perpustakaan.',
+                    'data' => [
+                        'lending_id' => $lending->id,
+                        'transaction_id' => $lending->transaction_id,
+                        'action' => 'approved',
+                        'status' => 'claim'
+                    ],
+                    'timestamp' => now(),
+                    'is_read' => false
+                ]);
+            } elseif ($lending->status === 'returned') {
+                // Return notification
+                $notificationType = $originalStatus === 'overdue' ? 'warning' : 'info';
+                $notificationTitle = $originalStatus === 'overdue' ? 'Pengembalian Terlambat' : 'Buku Dikembalikan';
+                $notificationMessage = $originalStatus === 'overdue'
+                    ? 'Buku telah dikembalikan dengan status terlambat.'
+                    : 'Buku telah berhasil dikembalikan.';
+
+                $notification = Notification::create([
+                    'user_id' => $lending->user_id,
+                    'type' => $notificationType,
+                    'title' => $notificationTitle,
+                    'message' => $notificationMessage,
+                    'data' => [
+                        'lending_id' => $lending->id,
+                        'transaction_id' => $lending->transaction_id,
+                        'action' => $originalStatus === 'overdue' ? 'returned_overdue' : 'returned',
+                        'status' => 'returned'
+                    ],
+                    'timestamp' => now(),
+                    'is_read' => false
+                ]);
+            }
+
+            // Send real-time notification via Pusher if notification was created
+            if ($notification) {
+                Log::info('Lending status change notification created', [
+                    'notification_id' => $notification->id,
+                    'user_id' => $lending->user_id,
+                    'from_status' => $originalStatus,
+                    'to_status' => $lending->status
+                ]);
+
+                $pusherData = [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->title,
+                    'message' => $notification->message,
+                    'data' => $notification->data,
+                    'timestamp' => $notification->timestamp->toISOString(),
+                    'is_read' => false
+                ];
+
+                try {
+                    $pusher = new Pusher(
+                        env('PUSHER_APP_KEY'),
+                        env('PUSHER_APP_SECRET'),
+                        env('PUSHER_APP_ID'),
+                        [
+                            'cluster' => env('PUSHER_APP_CLUSTER'),
+                            'useTLS' => true,
+                        ]
+                    );
+
+                    $channel = "user.{$lending->user_id}";
+                    $event = 'notification.created';
+
+                    $result = $pusher->trigger($channel, $event, $pusherData);
+
+                    Log::info('Pusher status change notification sent successfully', [
+                        'user_id' => $lending->user_id,
+                        'notification_id' => $notification->id,
+                        'channel' => $channel,
+                        'result' => $result
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send Pusher status change notification', [
+                        'user_id' => $lending->user_id,
+                        'notification_id' => $notification->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
             if ($lending->status == 'returned') {
-                // dd($lending->item);
-
-
                 // Increase book stock for each item in the lending
                 foreach ($lending->item as $item) {
                     $book = Books::find($item->book_id);
                     if ($book) {
                         $book->increment('stock', (int) $item->amount);
+                        Log::info('Book stock incremented after return', [
+                            'book_id' => $book->id,
+                            'amount' => $item->amount,
+                            'new_stock' => $book->stock,
+                            'lending_id' => $lending->id
+                        ]);
                     }
                 }
             }
@@ -485,6 +689,17 @@ class LendingController extends Controller
                 'success' => false,
                 'message' => 'You are not authorized to perform this action.',
             ], 403);
+        } catch (Exception $e) {
+            Log::error('Error in claim function', [
+                'lending_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing the claim.',
+            ], 500);
         }
     }
 }
