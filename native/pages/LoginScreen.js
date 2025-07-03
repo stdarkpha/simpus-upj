@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, SafeAreaView, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Config from "../config";
 
 export default function LoginScreen({ onLogin, navigation }) {
    const [email, setEmail] = useState("farouq@upj.com");
@@ -12,7 +13,7 @@ export default function LoginScreen({ onLogin, navigation }) {
       setIsLoggingIn(true);
       setError(null);
       try {
-         const response = await fetch("https://besimpus.farouq.me/api/user/login", {
+         const response = await fetch(`${Config.API_BASE_URL}/user/login`, {
             method: "POST",
             headers: {
                "Content-Type": "application/json",

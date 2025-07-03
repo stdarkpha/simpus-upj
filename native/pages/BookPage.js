@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Image, A
 import { useRoute } from "@react-navigation/native";
 import debounce from "lodash.debounce";
 import BookDetailModal from "../components/BookDetailModal";
+import Config from "../config";
 
 import Feather from "@expo/vector-icons/Feather";
 
@@ -44,7 +45,7 @@ export default function BookPage({ navigation }) {
       let isMounted = true;
       if (query && query.length >= 3) {
          setLoading(true);
-         fetch(`https://besimpus.farouq.me/api/books/search?query=${encodeURIComponent(query)}`)
+         fetch(`${Config.API_BASE_URL}/books/search?query=${encodeURIComponent(query)}`)
             .then((res) => res.json())
             .then((data) => {
                if (isMounted) {
@@ -68,7 +69,7 @@ export default function BookPage({ navigation }) {
       setPage(1);
       setHasMore(true);
       setLatestBooksLoading(true);
-      fetch(`https://besimpus.farouq.me/api/books?paginate=9&page=1`)
+      fetch(`${Config.API_BASE_URL}/books?paginate=9&page=1`)
          .then((res) => res.json())
          .then((data) => {
             setLatestBooks(data?.data?.data || []);
@@ -82,7 +83,7 @@ export default function BookPage({ navigation }) {
       if (!hasMore || isFetchingMore || latestBooksLoading) return;
       setIsFetchingMore(true);
       const nextPage = page + 1;
-      fetch(`https://besimpus.farouq.me/api/books?paginate=9&page=${nextPage}`)
+      fetch(`${Config.API_BASE_URL}/books?paginate=9&page=${nextPage}`)
          .then((res) => res.json())
          .then((data) => {
             setLatestBooks((prev) => [...prev, ...(data?.data?.data || [])]);
@@ -139,9 +140,10 @@ export default function BookPage({ navigation }) {
                </View>
             ) : searchResult?.data?.length > 0 ? (
                <FlatList
+                  key="search-results"
                   data={searchResult.data}
                   keyExtractor={(item) => item.id.toString()}
-                  contentContainerStyle={{ padding: 12, width: "100%", gap: 8 }}
+                  contentContainerStyle={{ paddingHorizontal: 0 }}
                   renderItem={({ item }) => (
                      <TouchableOpacity
                         style={styles.resultCard}
@@ -188,10 +190,11 @@ export default function BookPage({ navigation }) {
             )
          ) : (
             <FlatList
+               key="latest-books"
                data={latestBooks}
                keyExtractor={(item) => item.id.toString()}
                numColumns={3}
-               contentContainerStyle={{ padding: 12 }}
+               contentContainerStyle={{ paddingHorizontal: 12 }}
                renderItem={renderBookItem}
                ListFooterComponent={
                   isFetchingMore && (
@@ -273,8 +276,9 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      marginTop: 24,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      marginTop: 16,
    },
    sectionTitle: {
       fontSize: 20,

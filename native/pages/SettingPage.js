@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
+import Config from "../config";
 
 const handleLogout = async (setIsLoggedIn) => {
    // Accept setIsLoggedIn
@@ -12,7 +13,7 @@ const handleLogout = async (setIsLoggedIn) => {
       const token = user?.data?.token;
 
       if (token) {
-         await fetch("https://besimpus.farouq.me/api/user/logout", {
+         await fetch(`${Config.API_BASE_URL}/user/logout`, {
             method: "POST",
             headers: {
                Authorization: `Bearer ${token}`,

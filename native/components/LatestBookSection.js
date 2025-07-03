@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, memo } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, StyleSheet } from "react-native";
 import BookDetailModal from "./BookDetailModal";
+import Config from "../config";
 
 // Memoized item component to avoid re-renders
 const BookItem = memo(({ item, onPress }) => (
@@ -13,8 +14,12 @@ const BookItem = memo(({ item, onPress }) => (
             // defaultSource={require("../assets/placeholder.jpg")} // Use local placeholder image
          />
       </View>
-      <Text style={styles.latestTitle} numberOfLines={1}>{item.title}</Text>
-      <Text style={styles.latestAuthor} numberOfLines={1}>{item.author}</Text>
+      <Text style={styles.latestTitle} numberOfLines={1}>
+         {item.title}
+      </Text>
+      <Text style={styles.latestAuthor} numberOfLines={1}>
+         {item.author}
+      </Text>
    </TouchableOpacity>
 ));
 
@@ -28,7 +33,7 @@ export default function LatestBookSection() {
 
    useEffect(() => {
       let isMounted = true;
-      fetch("https://besimpus.farouq.me/api/books?paginate=9")
+      fetch(`${Config.API_BASE_URL}/books?paginate=9`)
          .then((res) => res.json())
          .then((data) => {
             if (isMounted) {
@@ -37,7 +42,9 @@ export default function LatestBookSection() {
             }
          })
          .catch(() => setLoading(false));
-      return () => { isMounted = false; };
+      return () => {
+         isMounted = false;
+      };
    }, []);
 
    const handleAddToCart = useCallback(() => {
@@ -54,9 +61,7 @@ export default function LatestBookSection() {
       setCartAvailable(false);
    }, []);
 
-   const renderItem = useCallback(({ item }) => (
-      <BookItem item={item} onPress={handleOpenModal} />
-   ), [handleOpenModal]);
+   const renderItem = useCallback(({ item }) => <BookItem item={item} onPress={handleOpenModal} />, [handleOpenModal]);
 
    if (loading) {
       return (
@@ -69,33 +74,15 @@ export default function LatestBookSection() {
 
    return (
       <View>
-         <FlatList
-            data={books}
-            horizontal
-            keyExtractor={(item) => item.id?.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={styles.latestList}
-            showsHorizontalScrollIndicator={false}
-            initialNumToRender={5}
-            maxToRenderPerBatch={5}
-            windowSize={5}
-            removeClippedSubviews
-         />
-         <BookDetailModal
-            visible={modalVisible}
-            onClose={() => setModalVisible(false)}
-            item={selectedBook}
-            loading={addCartLoading}
-            onAddToCart={handleAddToCart}
-            available={cartAvailable}
-         />
+         <FlatList data={books} horizontal keyExtractor={(item) => item.id?.toString()} renderItem={renderItem} contentContainerStyle={styles.latestList} showsHorizontalScrollIndicator={false} initialNumToRender={5} maxToRenderPerBatch={5} windowSize={5} removeClippedSubviews />
+         <BookDetailModal visible={modalVisible} onClose={() => setModalVisible(false)} item={selectedBook} loading={addCartLoading} onAddToCart={handleAddToCart} available={cartAvailable} />
       </View>
    );
 }
 
 const styles = StyleSheet.create({
    latestList: {
-      gap: 16
+      gap: 16,
    },
    latestItem: {
       width: 120,

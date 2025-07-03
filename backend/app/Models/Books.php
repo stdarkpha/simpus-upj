@@ -14,6 +14,7 @@ class Books extends Model
         'slug',
         'author',
         'category_id',
+        'color',
         'stock',
         'description',
         'status',

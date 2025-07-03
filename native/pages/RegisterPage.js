@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ActivityIndicator, Alert } from "react-native";
+import Config from "../config";
 
 export default function RegisterPage({ navigation }) {
    const [name, setName] = useState("");
@@ -16,7 +17,7 @@ export default function RegisterPage({ navigation }) {
       }
       setIsLoading(true);
       try {
-         const response = await fetch("https://besimpus.farouq.me/api/user/register", {
+         const response = await fetch(`${Config.API_BASE_URL}/user/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },
             body: JSON.stringify({

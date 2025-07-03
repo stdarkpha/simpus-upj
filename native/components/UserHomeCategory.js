@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, StyleSheet } from "react-native";
 import BookDetailModal from "./BookDetailModal";
+import Config from "../config";
 
 export default function UserHomeCategory({ navigation }) {
    const [categories, setCategories] = useState([]);
@@ -13,7 +14,7 @@ export default function UserHomeCategory({ navigation }) {
 
    useEffect(() => {
       let isMounted = true;
-      fetch("https://besimpus.farouq.me/api/books/category")
+      fetch(`${Config.API_URL}/books/category`)
          .then((res) => res.json())
          .then((data) => {
             if (isMounted) {
@@ -44,48 +45,46 @@ export default function UserHomeCategory({ navigation }) {
    const selectedCategory = categories[selectedIdx];
    const books = selectedCategory?.books || [];
 
-   const renderCategoryTab = useCallback(({ item, index }) => (
-      <TouchableOpacity
-         onPress={() => setSelectedIdx(index)}
-         style={[styles.categoryTab, index === selectedIdx ? styles.categoryTabActive : styles.categoryTabInactive]}
-         activeOpacity={0.8}
-      >
-         <Text
-            style={[styles.categoryTabText, index === selectedIdx ? styles.categoryTabTextActive : styles.categoryTabTextInactive]}
-         >
-            {item.name} ({item.books?.length || 0})
-         </Text>
-      </TouchableOpacity>
-   ), [selectedIdx]);
-
-   const renderBookItem = useCallback(({ item }) => (
-      <TouchableOpacity
-         style={styles.categoryBookCard}
-         activeOpacity={0.85}
-         onPress={() => handleBookPress(item)}
-      >
-         <View style={styles.categoryBookImageWrap}>
-            <Image source={{ uri: item.img }} style={styles.categoryBookImage} resizeMode="cover" />
-         </View>
-         <View style={styles.categoryBookInfo}>
-            <Text style={styles.categoryBookTitle} numberOfLines={2}>{item.title}</Text>
-            <Text style={styles.categoryBookAuthor}>Author: {item.author}</Text>
-            <Text style={styles.categoryBookDesc} numberOfLines={2}>
-               {item.description ? item.description.replace(/<[^>]+>/g, "") : "Tidak Ada Deskripsi"}
+   const renderCategoryTab = useCallback(
+      ({ item, index }) => (
+         <TouchableOpacity onPress={() => setSelectedIdx(index)} style={[styles.categoryTab, index === selectedIdx ? styles.categoryTabActive : styles.categoryTabInactive]} activeOpacity={0.8}>
+            <Text style={[styles.categoryTabText, index === selectedIdx ? styles.categoryTabTextActive : styles.categoryTabTextInactive]}>
+               {item.name} ({item.books?.length || 0})
             </Text>
-            <View style={styles.categoryBookFooter}>
-               {item.stock ? (
-                  <Text style={styles.categoryBookStock}>
-                     Tersedia <Text style={{ color: "#dc2626", fontWeight: "bold" }}>{item.stock} Buku</Text>
-                  </Text>
-               ) : (
-                  <Text style={styles.categoryBookNotAvailable}>Status: Tidak Tersedia</Text>
-               )}
-               <Text style={styles.categoryBookDetail}>Detail ➔</Text>
+         </TouchableOpacity>
+      ),
+      [selectedIdx]
+   );
+
+   const renderBookItem = useCallback(
+      ({ item }) => (
+         <TouchableOpacity style={styles.categoryBookCard} activeOpacity={0.85} onPress={() => handleBookPress(item)}>
+            <View style={styles.categoryBookImageWrap}>
+               <Image source={{ uri: item.img }} style={styles.categoryBookImage} resizeMode="cover" />
             </View>
-         </View>
-      </TouchableOpacity>
-   ), [handleBookPress]);
+            <View style={styles.categoryBookInfo}>
+               <Text style={styles.categoryBookTitle} numberOfLines={2}>
+                  {item.title}
+               </Text>
+               <Text style={styles.categoryBookAuthor}>Author: {item.author}</Text>
+               <Text style={styles.categoryBookDesc} numberOfLines={2}>
+                  {item.description ? item.description.replace(/<[^>]+>/g, "") : "Tidak Ada Deskripsi"}
+               </Text>
+               <View style={styles.categoryBookFooter}>
+                  {item.stock ? (
+                     <Text style={styles.categoryBookStock}>
+                        Tersedia <Text style={{ color: "#dc2626", fontWeight: "bold" }}>{item.stock} Buku</Text>
+                     </Text>
+                  ) : (
+                     <Text style={styles.categoryBookNotAvailable}>Status: Tidak Tersedia</Text>
+                  )}
+                  <Text style={styles.categoryBookDetail}>Detail ➔</Text>
+               </View>
+            </View>
+         </TouchableOpacity>
+      ),
+      [handleBookPress]
+   );
 
    if (loading) {
       return (
@@ -106,36 +105,11 @@ export default function UserHomeCategory({ navigation }) {
 
    return (
       <View style={{ marginTop: 4 }}>
-         <FlatList
-            data={categories}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id?.toString()}
-            contentContainerStyle={{ paddingLeft: 4, paddingBottom: 8 }}
-            renderItem={renderCategoryTab}
-            extraData={selectedIdx}
-         />
+         <FlatList data={categories} horizontal showsHorizontalScrollIndicator={false} keyExtractor={(item) => item.id?.toString()} contentContainerStyle={{ paddingLeft: 4, paddingBottom: 8 }} renderItem={renderCategoryTab} extraData={selectedIdx} />
 
-         {books.length > 0 ? (
-            <FlatList
-               data={books}
-               keyExtractor={(item) => item.id?.toString()}
-               renderItem={renderBookItem}
-               contentContainerStyle={{ paddingBottom: 20 }}
-               scrollEnabled={false}
-            />
-         ) : (
-            <Text style={{ color: "#6b7280", marginTop: 16 }}>Tidak ada buku di kategori ini.</Text>
-         )}
+         {books.length > 0 ? <FlatList data={books} keyExtractor={(item) => item.id?.toString()} renderItem={renderBookItem} contentContainerStyle={{ paddingBottom: 20 }} scrollEnabled={false} /> : <Text style={{ color: "#6b7280", marginTop: 16 }}>Tidak ada buku di kategori ini.</Text>}
 
-         <BookDetailModal
-            visible={modalVisible}
-            onClose={() => setModalVisible(false)}
-            item={selectedBook}
-            loading={addCartLoading}
-            onAddToCart={handleAddToCart}
-            available={cartAvailable}
-         />
+         <BookDetailModal visible={modalVisible} onClose={() => setModalVisible(false)} item={selectedBook} loading={addCartLoading} onAddToCart={handleAddToCart} available={cartAvailable} />
       </View>
    );
 }

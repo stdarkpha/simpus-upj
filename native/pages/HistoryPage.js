@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Modal, TextInput, Dimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Config from "../config";
 
 const { width } = Dimensions.get("window");
 
@@ -35,7 +36,7 @@ export default function HistoryPage({ navigation }) {
          const userStr = await AsyncStorage.getItem("user");
          const user = userStr ? JSON.parse(userStr) : null;
          const token = user?.data?.token;
-         let url = "https://besimpus.farouq.me/api/lending/history";
+         let url = `${Config.API_BASE_URL}/lending/history`;
          if (dateFilter) url += `?date=${dateFilter}`;
          const res = await fetch(url, {
             headers: {
@@ -63,7 +64,7 @@ export default function HistoryPage({ navigation }) {
             const userStr = await AsyncStorage.getItem("user");
             const user = userStr ? JSON.parse(userStr) : null;
             const token = user?.data?.token;
-            const res = await fetch(`https://besimpus.farouq.me/api/lending/history/${selectedItem.id}`, {
+            const res = await fetch(`${Config.API_BASE_URL}/lending/history/${selectedItem.id}`, {
                headers: {
                   Authorization: `Bearer ${token}`,
                   Accept: "application/json",
@@ -132,11 +133,7 @@ export default function HistoryPage({ navigation }) {
                                  <Text style={styles.historyBookTitle} numberOfLines={1}>
                                     Buku: {data.book.title}
                                  </Text>
-                                 {idx === 0 && item.compact.length > 1 && (
-                                    <Text style={styles.historyBookOther}>
-                                       (+{item.compact.length - 1} Buku Lainnya)
-                                    </Text>
-                                  )}
+                                 {idx === 0 && item.compact.length > 1 && <Text style={styles.historyBookOther}>(+{item.compact.length - 1} Buku Lainnya)</Text>}
                               </View>
                            ))}
                         </View>
@@ -215,8 +212,8 @@ export default function HistoryPage({ navigation }) {
                                  alignItems: "center",
                                  justifyContent: "center",
                                  // flex: 1,
-                                    minHeight: 240,
-                                 backgroundColor: "#fff"
+                                 minHeight: 240,
+                                 backgroundColor: "#fff",
                               }}
                            >
                               <ActivityIndicator size="large" color="#dc2626" />

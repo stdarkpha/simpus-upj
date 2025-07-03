@@ -92,6 +92,7 @@ class BooksController extends Controller
                 'total_page' => 'nullable|integer|min:1',
                 'description' => 'nullable|string',
                 'category_id' => 'required|exists:categories,id',
+                'color' => 'nullable|string|max:20',
                 'stock' => 'required|integer|min:1',
                 'status' => 'required|in:active,inactive',
             ]);

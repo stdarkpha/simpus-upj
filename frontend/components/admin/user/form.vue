@@ -15,7 +15,19 @@
       </div>
       <div class="grid w-full items-center gap-3.5">
          <Label for="role">Role</Label>
-         <Input id="role" v-model="role" type="text" disabled placeholder="role" />
+         <Select v-model="role">
+            <SelectTrigger class="w-full">
+               <SelectValue placeholder="Select a Role" />
+            </SelectTrigger>
+            <SelectContent>
+               <SelectGroup>
+                  <SelectLabel>Roles</SelectLabel>
+                  <SelectItem :value="item" v-for="item in role_list" :disabled="item == 'admin'">
+                     {{ item }}
+                  </SelectItem>
+               </SelectGroup>
+            </SelectContent>
+         </Select>
       </div>
       <div class="grid w-full items-center gap-3.5">
          <Label for="password">Password</Label>
@@ -37,6 +49,23 @@ import { Icon } from "@iconify/vue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "vue-sonner";
+import {
+   Select,
+   SelectContent,
+   SelectGroup,
+   SelectItem,
+   SelectLabel,
+   SelectTrigger,
+   SelectValue,
+} from '@/components/ui/select'
+
+const role_list = [
+   'admin',
+   'mahasiswa',
+   'dosen',
+   'staff',
+]
+
 
 const props = defineProps<{
    id?: number;

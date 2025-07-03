@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, Modal, TextInput, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
+import Config from "../config";
 
-import Ionicons from '@expo/vector-icons/Ionicons';
-import Feather from '@expo/vector-icons/Feather';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import Feather from "@expo/vector-icons/Feather";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 export default function BagPage({ navigation }) {
    const isFocused = useIsFocused();
@@ -23,7 +24,7 @@ export default function BagPage({ navigation }) {
          const userStr = await AsyncStorage.getItem("user");
          const user = userStr ? JSON.parse(userStr) : null;
          const token = user?.data?.token;
-         const res = await fetch("https://besimpus.farouq.me/api/lending/cart", {
+         const res = await fetch(`${Config.API_BASE_URL}/lending/cart`, {
             headers: {
                Authorization: `Bearer ${token}`,
                Accept: "application/json",
@@ -57,7 +58,7 @@ export default function BagPage({ navigation }) {
                   const userStr = await AsyncStorage.getItem("user");
                   const user = userStr ? JSON.parse(userStr) : null;
                   const token = user?.data?.token;
-                  await fetch(`https://besimpus.farouq.me/api/lending/cart/${id}`, {
+                  await fetch(`${Config.API_BASE_URL}/lending/cart/${id}`, {
                      method: "DELETE",
                      headers: {
                         Authorization: `Bearer ${token}`,
@@ -85,7 +86,7 @@ export default function BagPage({ navigation }) {
                   const userStr = await AsyncStorage.getItem("user");
                   const user = userStr ? JSON.parse(userStr) : null;
                   const token = user?.data?.token;
-                  await fetch(`https://besimpus.farouq.me/api/lending/cart/clear`, {
+                  await fetch(`${Config.API_BASE_URL}/lending/cart/clear`, {
                      method: "DELETE",
                      headers: {
                         Authorization: `Bearer ${token}`,
@@ -113,7 +114,7 @@ export default function BagPage({ navigation }) {
          const userStr = await AsyncStorage.getItem("user");
          const user = userStr ? JSON.parse(userStr) : null;
          const token = user?.data?.token;
-         await fetch(`https://besimpus.farouq.me/api/lending/confirm`, {
+         await fetch(`${Config.API_BASE_URL}/lending/confirm`, {
             method: "POST",
             headers: {
                Authorization: `Bearer ${token}`,
@@ -135,7 +136,7 @@ export default function BagPage({ navigation }) {
    return (
       <View style={{ flex: 1, backgroundColor: "#fff", position: "relative" }}>
          <ScrollView contentContainerStyle={{ paddingBottom: 140, paddingHorizontal: 16 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingTop: 0,  }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingTop: 0 }}>
                <Text style={{ fontSize: 20, fontWeight: "bold" }}>Tas Saya</Text>
                <Text style={{ fontWeight: "bold", color: "#dc2626" }}>Total: {cartData.length}</Text>
             </View>
@@ -144,7 +145,7 @@ export default function BagPage({ navigation }) {
                   <ActivityIndicator size="large" color="#dc2626" />
                </View>
             ) : cartData.length > 0 ? (
-               <View style={{ gap: 4, marginTop: 16}}>
+               <View style={{ gap: 4, marginTop: 16 }}>
                   {cartData.map((item) => (
                      <View key={item.id} style={styles.cartItem}>
                         <View style={styles.cartImageWrap}>
@@ -179,14 +180,12 @@ export default function BagPage({ navigation }) {
          {cartData.length > 0 && (
             <View style={styles.bottomActions}>
                <TouchableOpacity style={styles.clearBtn} onPress={clearCart}>
-                     <Ionicons name="bag-remove-outline" size={24} color="black" />
-                  <Text style={{ color: "#222", fontWeight: "bold" }}>
-                     Bersihkan</Text>
+                  <Ionicons name="bag-remove-outline" size={24} color="black" />
+                  <Text style={{ color: "#222", fontWeight: "bold" }}>Bersihkan</Text>
                </TouchableOpacity>
                <TouchableOpacity style={styles.lendBtn} onPress={() => setIsLend(true)}>
                   <Ionicons name="bag-check-outline" size={24} color="white" />
-                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                     Pinjam ({cartData.length})</Text>
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>Pinjam ({cartData.length})</Text>
                </TouchableOpacity>
             </View>
          )}
@@ -396,7 +395,7 @@ const styles = StyleSheet.create({
    },
    customDurationInput: {
       // width: "100%",
-      flexGrow:1,
+      flexGrow: 1,
       fontSize: 16,
       paddingVertical: 8,
       paddingHorizontal: 8,

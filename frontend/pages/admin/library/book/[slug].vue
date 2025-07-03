@@ -16,10 +16,16 @@
           <Input id="picture" @change="handleFile" type="file" />
 
           <img v-if="picture || img" :src="pictureUrl ? pictureUrl : img" class="w-full h-auto rounded-md object-cover"
-            alt="Preview Image" />
+            :style="`box-shadow: 0 24px 32px -4px rgba(${color}, 1);`" alt="Preview Image" />
           <!-- placeholder -->
           <img v-else src="https://placehold.co/100x140?text=Insert+Image+Here"
             class="w-full h-auto rounded-md object-cover" alt="Placeholder Image" />
+
+          <!-- input color -->
+          <div class="grid w-full items-center mt-8 gap-3.5">
+            <Label for="color">Theme Setting: {{ color }}</Label>
+            <Input id="color" v-model="rgbToHex" type="color" />
+          </div>
         </div>
       </div>
 
@@ -143,13 +149,31 @@ const pictureUrl = computed(() => {
   }
 });
 
-const handleFile = (event: Event) => {
+import { FastAverageColor } from "fast-average-color";
+
+const getAverageColor = async (imageUrl: string) => {
+   const fac = new FastAverageColor();
+   const color = await fac.getColorAsync(imageUrl);
+   return {
+      hex: color.hex,
+      rgb: color.rgb,
+      value: color.value,
+      shadow: `${color.value.slice(0, 3).map((v: number) => v < 100 ? v + 10 : v).join(', ')}`
+   };
+};
+
+const handleFile = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   if (file) {
     picture.value = file
+    const url = URL.createObjectURL(file)
+    const avg = await getAverageColor(url)
+    color.value = avg.shadow
   }
 }
+
+
 
 const id = ref(null)
 const title = ref('')
@@ -160,9 +184,34 @@ const release_date = ref<any>(undefined)
 const author = ref('')
 const stock = ref('')
 const total_page = ref('')
+const color = ref('')
 const config = useRuntimeConfig()
 const emit = defineEmits()
 const { token } = useAuth()
+
+// create compute to convert from rgb to hex
+const rgbToHex = computed({
+  get() {
+    if (!color.value) return '';
+    const rgb = color.value.split(',').map(Number);
+    if (rgb.length !== 3 || rgb.some(isNaN)) return '';
+    return `#${((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1)}`;
+  },
+  set(hex: string) {
+    if (!hex.startsWith('#') || (hex.length !== 7 && hex.length !== 4)) return;
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 7) {
+      r = parseInt(hex.slice(1, 3), 16);
+      g = parseInt(hex.slice(3, 5), 16);
+      b = parseInt(hex.slice(5, 7), 16);
+    } else if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    }
+    color.value = `${r}, ${g}, ${b}`;
+  }
+});
 
 const submitForm = async () => {
   const formData = new FormData()
@@ -183,6 +232,7 @@ const submitForm = async () => {
   formData.append('author', author.value)
   formData.append('stock', stock.value)
   formData.append('total_page', total_page.value)
+  formData.append('color', color.value)
   formData.append('status', status.value)
 
   await $fetch(`${config.public.API_URL}books`, {
@@ -205,7 +255,7 @@ const submitForm = async () => {
 }
 
 const slug = useRoute().params.slug
-// const client = useSanctumClient();
+//@ts-ignore
 import { parseDate } from '@internationalized/date'
 onMounted(async () => {
   if (slug && !isNaN(Number(slug))) {
@@ -221,6 +271,7 @@ onMounted(async () => {
       author.value = data.data.author
       stock.value = data.data.stock
       total_page.value = data.data.total_page
+      color.value = data.data.color || ''
 
       if (data.data.img) {
         img.value = data.data.img

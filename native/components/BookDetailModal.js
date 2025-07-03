@@ -3,6 +3,7 @@ import { Modal, View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Act
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Config from "../config";
 
 export default function BookDetailModal({ visible, onClose, item, loading, setLoading }) {
    // Use state for available state
@@ -39,7 +40,7 @@ export default function BookDetailModal({ visible, onClose, item, loading, setLo
          const user = userStr ? JSON.parse(userStr) : null;
          const token = user?.data?.token;
 
-         const response = await fetch("https://besimpus.farouq.me/api/lending/cart", {
+         const response = await fetch(`${Config.API_BASE_URL}/lending/cart`, {
             method: "POST",
             headers: {
                "Content-Type": "application/json",

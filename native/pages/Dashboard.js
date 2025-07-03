@@ -62,7 +62,7 @@ export default function Dashboard({ onLogout, navigation }) {
       {
          key: "category",
          render: () => (
-            <View style={styles.sectionContainer}>
+            <View style={[styles.sectionContainer, { marginBottom: 64 }]}>
                <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Kategori Buku</Text>
                </View>
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
       width: 200,
       zIndex: -1,
    },
-   sectionContainer: { marginTop: 32, paddingHorizontal: 16 },
+   sectionContainer: { marginTop: 24, paddingHorizontal: 16 },
    sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",

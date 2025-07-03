@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Dimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BookDetailModal from "./BookDetailModal";
+import Config from "../config";
 
 const { width } = Dimensions.get("window");
 
@@ -17,7 +18,7 @@ export default function LendingBook({ navigation }) {
             const userStr = await AsyncStorage.getItem("user");
             const user = userStr ? JSON.parse(userStr) : null;
             const token = user?.data?.token;
-            const response = await fetch("https://besimpus.farouq.me/api/lending/reminder", {
+            const response = await fetch(`${Config.API_BASE_URL}/lending/reminder`, {
                headers: {
                   Authorization: `Bearer ${token}`,
                   Accept: "application/json",
@@ -68,6 +69,11 @@ export default function LendingBook({ navigation }) {
       return remainingPercent.toFixed(2) || 0;
    };
 
+   // Return null if no lending items
+   if (!loading && (!lendingData.items || lendingData.items.length === 0)) {
+      return null;
+   }
+
    return (
       <View style={{ marginTop: 16, paddingHorizontal: 16 }}>
          <View style={styles.headerRow}>
@@ -80,7 +86,7 @@ export default function LendingBook({ navigation }) {
             <ActivityIndicator size="large" color="#dc2626" style={{ marginVertical: 32 }} />
          ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>
-               {lendingData.items.map((item, idx) => {
+               {lendingData.items?.map((item, idx) => {
                   const percentage = countPercentage(lendingData.lend_date, lendingData.return_date);
                   return (
                      <TouchableOpacity key={item.book.id} style={[styles.slide, { backgroundColor: `rgba(220,38,38,0.08)` }]} activeOpacity={0.9} onPress={() => setItemActive(item.book)}>

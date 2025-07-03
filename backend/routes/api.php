@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\BooksController;
 use App\Http\Controllers\Api\LendingController;
+use App\Http\Controllers\Api\NotificationController;
 
 
 Route::post('/user/register', [UserController::class, 'registerMahasiswa']);
@@ -75,5 +76,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // claim book
         Route::post('/claim/{id}', [LendingController::class, 'claim']);
+    });
+
+    // notifications
+    Route::prefix('notifications')->group(function () {
+        // Get user notifications
+        Route::get('/', [NotificationController::class, 'index']);
     });
 });

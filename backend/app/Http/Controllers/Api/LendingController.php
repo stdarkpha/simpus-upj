@@ -7,6 +7,7 @@ use App\Models\Books;
 use App\Models\Lending;
 use App\Models\LendingCart;
 use App\Models\LendingItem;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -240,6 +241,15 @@ class LendingController extends Controller
             // Clear the cart after successful lending
             LendingCart::where('user_id', $user_id)->delete();
             DB::commit();
+
+            // Create notification for successful lending
+            Notification::create([
+                'user_id' => $user_id,
+                'type' => 'lending',
+                'title' => 'Lending ' . now()->format('Y-m-d H:i:s') . ' success',
+                'desc' => 'Your book lending success you can go to library to verify the book lending',
+                'variant' => 'success'
+            ]);
 
             return response()->json([
                 'success' => true,
