@@ -248,14 +248,12 @@ export default function HistoryPage({ navigation }) {
                            <Text style={[styles.historyStatus, { backgroundColor: getStatusColor(item.status) }]}>{statusMapping[item.status] || item.status}</Text>
                         </View>
                         <View style={styles.historyBooksWrap}>
-                           {historyData[0].compact.map((data, idx) => (
-                              <View key={idx} style={styles.historyBookRow}>
-                                 <Text style={styles.historyBookTitle} numberOfLines={1}>
-                                    Buku: {data.book.title}
-                                 </Text>
-                                 {idx === 0 && item.compact.length > 1 && <Text style={styles.historyBookOther}>(+{item.compact.length - 1} Buku Lainnya)</Text>}
-                              </View>
-                           ))}
+                           <View style={styles.historyBookRow}>
+                              <Text style={styles.historyBookTitle} numberOfLines={1}>
+                                 Buku: {item.compact[0]?.book?.title || "Tidak ada buku"}
+                              </Text>
+                              {item.compact.length > 1 && <Text style={styles.historyBookOther}>(+{item.compact.length - 1} Buku Lainnya)</Text>}
+                           </View>
                         </View>
                         <View style={styles.historyCardRow}>
                            <View style={{ flex: 1 }}>
