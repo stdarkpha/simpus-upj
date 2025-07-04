@@ -90,7 +90,7 @@ class UserController extends Controller
                 'id' => 'nullable|integer',
                 'name' => 'required|string|max:255',
                 'uid' => 'nullable|string',
-                'email' => 'required|email|unique:users',
+                'email' => 'required|email',
                 'password' => 'nullable|string|min:6|confirmed',
             ]);
 
