@@ -228,8 +228,6 @@ const styles = StyleSheet.create({
       width: "100%",
       height: 160,
       backgroundColor: "#E7000B",
-      // borderBottomLeftRadius: 24,
-      // borderBottomRightRadius: 24,
       zIndex: -1,
    },
    headerContainer: {

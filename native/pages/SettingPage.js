@@ -5,9 +5,7 @@ import { Alert } from "react-native";
 import Config from "../config";
 
 const handleLogout = async (setIsLoggedIn) => {
-   // Accept setIsLoggedIn
    try {
-      // It's good practice to also inform the server about the logout
       const userStr = await AsyncStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       const token = user?.data?.token;
@@ -21,16 +19,12 @@ const handleLogout = async (setIsLoggedIn) => {
                "Content-Type": "application/json",
             },
          });
-         // Not handling the response of the fetch for simplicity,
-         // but in a real app you might want to.
       }
    } catch (e) {
-      // Even if the server call fails, the user should be logged out on the client
       Alert.alert("Logout Error", "Terjadi kesalahan saat menghubungi server.");
    } finally {
-      // This block will run regardless of errors
       await AsyncStorage.removeItem("user");
-      setIsLoggedIn(false); // This will trigger the navigation change
+      setIsLoggedIn(false); 
    }
 };
 
@@ -139,15 +133,12 @@ export default function SettingPage({ navigation, setIsLoggedIn }) {
 
             <View style={styles.settingsList}>
                <TouchableOpacity style={styles.settingsItem}>
-                  {/* <Icon name="account" size={24} color="#333" /> */}
                   <Text style={styles.settingsText}>Update Foto</Text>
                </TouchableOpacity>
                <TouchableOpacity style={styles.settingsItem}>
-                  {/* <Icon name="form-select" size={24} color="#333" /> */}
                   <Text style={styles.settingsText}>Update Profile</Text>
                </TouchableOpacity>
                <TouchableOpacity style={[styles.settingsItem, styles.logoutItem]} onPress={() => handleLogout(setIsLoggedIn)}>
-                  {/* <Icon name="logout" size={24} color="#E7000B" /> */}
                   <Text style={[styles.settingsText, styles.logoutText]}>Keluar</Text>
                </TouchableOpacity>
             </View>

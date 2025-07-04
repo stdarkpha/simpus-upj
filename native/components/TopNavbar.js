@@ -6,21 +6,21 @@ import Pusher from "pusher-js";
 import Config from "../config";
 
 export default function UserNavbar({ status = "authenticated", greetings = "Pagi", userData = { data: { name: "Nama Pengguna" } } }) {
-   // State management
+   // Manajemen state
    const [userName, setUserName] = useState(userData?.data?.name);
    const [notifications, setNotifications] = useState([]);
    const [unreadCount, setUnreadCount] = useState(0);
    const [showNotifications, setShowNotifications] = useState(false);
    const [authToken, setAuthToken] = useState(null);
 
-   // Pusher refs
+   // Refs untuk Pusher
    const pusherRef = useRef(null);
    const channelRef = useRef(null);
    const pollingIntervalRef = useRef(null);
 
-   // Animation
+   // Animasi
    const badgeScale = useRef(new Animated.Value(1)).current;
-   const panelTranslateY = useRef(new Animated.Value(300)).current; // Start off-screen
+   const panelTranslateY = useRef(new Animated.Value(300)).current; // Mulai dari luar layar
 
    useEffect(() => {
       initializeNotifications();
@@ -28,10 +28,10 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
    }, []);
 
    useEffect(() => {
-      // Initialize Pusher when we have both user data and auth token
+      // Inisialisasi Pusher ketika kita memiliki data user dan auth token
       const initializePusherIfReady = async () => {
          if (authToken) {
-            // Get user data from AsyncStorage if not passed via props
+            // Dapatkan data user dari AsyncStorage jika tidak diteruskan melalui props
             let currentUserData = userData;
 
             if (!userData?.data?.id) {
@@ -59,7 +59,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
       try {
          console.log("🚀 Initializing notifications...");
 
-         // Get user data and token from AsyncStorage (correct method)
+         // Dapatkan data user dan token dari AsyncStorage (metode yang benar)
          const userStr = await AsyncStorage.getItem("user");
          const user = userStr ? JSON.parse(userStr) : null;
          const token = user?.data?.token;
@@ -72,10 +72,10 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
             console.log("✅ Username set:", user.data.name);
          }
 
-         // Store the complete user data for later use
+         // Simpan data user lengkap untuk digunakan nanti
          if (user?.data?.id) {
             console.log("🆔 User ID found:", user.data.id);
-            // Update the userData prop with the stored data
+            // Update prop userData dengan data yang tersimpan
             userData.data = { ...userData.data, ...user.data };
          }
 
@@ -136,11 +136,11 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
       }
 
       try {
-         // Initialize Pusher with Expo-compatible settings
+         // Inisialisasi Pusher dengan pengaturan yang kompatibel dengan Expo
          pusherRef.current = new Pusher(Config.PUSHER_KEY, {
             cluster: Config.PUSHER_CLUSTER,
             forceTLS: true,
-            // For React Native/Expo compatibility
+            // Untuk kompatibilitas React Native/Expo
             enabledTransports: ["ws", "wss"],
          });
 
@@ -149,7 +149,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
 
          channelRef.current = pusherRef.current.subscribe(channelName);
 
-         // Listen for new notifications
+         // Dengarkan notifikasi baru
          channelRef.current.bind("notification.created", (data) => {
             console.log("🔔 New notification received:", data);
             handleNewNotification(data);
@@ -170,11 +170,11 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
 
          pusherRef.current.connection.bind("unavailable", () => {
             console.warn("⚠️ Pusher unavailable, falling back to polling");
-            startPolling(); // Fallback to polling
+            startPolling(); // Fallback ke polling
          });
       } catch (error) {
          console.error("💥 Failed to initialize Pusher:", error);
-         startPolling(); // Fallback to polling
+         startPolling(); // Fallback ke polling
       }
    };
 
@@ -189,7 +189,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
    };
 
    const startPolling = () => {
-      if (pollingIntervalRef.current) return; // Already polling
+      if (pollingIntervalRef.current) return; // Sudah polling
 
       console.log("🔄 Starting notification polling as fallback...");
 
@@ -197,7 +197,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
          if (authToken) {
             await fetchNotifications(authToken);
          }
-      }, 30000); // Poll every 30 seconds
+      }, 30000); // Polling setiap 30 detik
    };
 
    const animateBadge = () => {
@@ -217,10 +217,10 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
 
    const toggleNotifications = () => {
       if (!showNotifications) {
-         // Reset panel to bottom position first
+         // Reset panel ke posisi bawah terlebih dahulu
          panelTranslateY.setValue(300);
          setShowNotifications(true);
-         // Small delay to ensure modal is rendered, then animate panel sliding up
+         // Delay kecil untuk memastikan modal di-render, lalu animasi panel naik
          setTimeout(() => {
             Animated.timing(panelTranslateY, {
                toValue: 0,
@@ -229,7 +229,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
             }).start();
          }, 50);
       } else {
-         // Animate panel sliding down
+         // Animasi panel turun
          Animated.timing(panelTranslateY, {
             toValue: 500,
             duration: 400,
@@ -241,7 +241,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
    };
 
    const dismissModal = () => {
-      // Animate panel sliding down
+      // Animasi panel turun
       Animated.timing(panelTranslateY, {
          toValue: 500,
          duration: 400,
@@ -373,7 +373,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
                </View>
             </View>
 
-            {/* Notification Icon with Badge */}
+            {/* Ikon Notifikasi dengan Badge */}
             <TouchableOpacity style={styles.notifIcon} onPress={toggleNotifications}>
                <MaterialIcons name="notifications-none" size={32} color="#888" />
                {unreadCount > 0 && (
@@ -384,10 +384,10 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
             </TouchableOpacity>
          </View>
 
-         {/* Notifications Modal */}
+         {/* Modal Notifikasi */}
          <Modal visible={showNotifications} animationType="fade" transparent={true} onRequestClose={dismissModal}>
             <View style={styles.modalOverlay}>
-               {/* Background overlay that dismisses modal when tapped */}
+               {/* Overlay background yang menutup modal ketika di-tap */}
                <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={dismissModal} />
 
                <Animated.View
@@ -406,7 +406,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
                      </TouchableOpacity>
                   </View>
 
-                  {/* Notifications List */}
+                  {/* Daftar Notifikasi */}
                   <View style={styles.notificationsList}>
                      {notifications.length === 0 ? (
                         <View style={styles.emptyState}>
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
       fontSize: 12,
       fontWeight: "bold",
    },
-   // Modal Styles
+   // Gaya Modal
    modalOverlay: {
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",

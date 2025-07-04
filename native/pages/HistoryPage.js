@@ -55,7 +55,6 @@ export default function HistoryPage({ navigation }) {
    const [qrData, setQRData] = useState(null);
    const [dateFilter, setDateFilter] = useState("");
 
-   // Pusher WebSocket refs
    const pusherRef = useRef(null);
    const channelRef = useRef(null);
    const userDataRef = useRef(null);
@@ -90,12 +89,8 @@ export default function HistoryPage({ navigation }) {
       }
    };
 
-   // Initialize Pusher WebSocket for real-time updates
    const initializePusher = async () => {
       try {
-         // console.log("🚀 [HistoryPage] Initializing Pusher...");
-
-         // Get user data and token from AsyncStorage
          const userStr = await AsyncStorage.getItem("user");
          const user = userStr ? JSON.parse(userStr) : null;
 
@@ -105,9 +100,6 @@ export default function HistoryPage({ navigation }) {
          }
 
          userDataRef.current = user;
-         // console.log("🆔 [HistoryPage] User ID found:", user.data.id);
-
-         // Initialize Pusher
          pusherRef.current = new Pusher(Config.PUSHER_KEY, {
             cluster: Config.PUSHER_CLUSTER,
             forceTLS: true,
@@ -115,26 +107,18 @@ export default function HistoryPage({ navigation }) {
          });
 
          const channelName = `user.${user.data.id}`;
-         // console.log("📡 [HistoryPage] Subscribing to channel:", channelName);
 
          channelRef.current = pusherRef.current.subscribe(channelName);
 
-         // Listen for notification events that should trigger history refresh
          channelRef.current.bind("notification.created", (data) => {
-            // console.log("🔔 [HistoryPage] Notification received:", data);
-            // console.log("🔄 [HistoryPage] Refreshing history due to new notification...");
-
-            // Close any open modals to show updated data
             setSelectedItem(null);
             setShowQR(false);
 
-            // Update last update timestamp
             setLastUpdate(new Date().toLocaleTimeString());
 
-            // Show a brief visual feedback that new data is coming
             setTimeout(() => {
-               fetchHistory(true); // Refresh history when notification is received (with refresh indicator)
-            }, 500); // Small delay to show the refresh indicator
+               fetchHistory(true);
+            }, 500);
          });
 
          pusherRef.current.connection.bind("connected", () => {
@@ -156,7 +140,6 @@ export default function HistoryPage({ navigation }) {
       }
    };
 
-   // Cleanup Pusher connections
    const cleanup = () => {
       console.log("🧹 [HistoryPage] Cleaning up Pusher connections...");
 
@@ -179,13 +162,11 @@ export default function HistoryPage({ navigation }) {
       fetchHistory();
       initializePusher();
 
-      // Cleanup function
       return () => {
          cleanup();
       };
    }, [dateFilter]);
 
-   // Fetch QR code for selected item
    useEffect(() => {
       const fetchQR = async () => {
          if (!showQR || !selectedItem) return setQRData(null);
@@ -210,7 +191,6 @@ export default function HistoryPage({ navigation }) {
 
    return (
       <View style={{ flex: 1, backgroundColor: "#fff" }}>
-         {/* Red header background */}
          <ScrollView contentContainerStyle={{ paddingBottom: 64 }}>
             <View style={styles.headerBg} />
             <View style={styles.headerContainer}>
@@ -219,14 +199,12 @@ export default function HistoryPage({ navigation }) {
                      <Text style={styles.headerTitle}>Riwayat Pinjaman</Text>
                      <Text style={styles.headerSubtitle}>Filter riwayat dengan tanggal</Text>
                   </View>
-                  {/* Connection status indicator */}
                   <View style={[styles.connectionStatus, { backgroundColor: isConnected ? "#059669" : "#6b7280" }]}>
                      <MaterialIcons name="wifi" size={16} color="#fff" />
                      <Text style={styles.connectionText}>{isConnected ? "Live" : "Offline"}</Text>
                      {lastUpdate && isConnected && <Text style={styles.lastUpdateText}>• {lastUpdate}</Text>}
                   </View>
                </View>
-               {/* Date Filter */}
                <View style={styles.searchBar}>
                   <Text style={styles.searchIcon}>📅</Text>
                   <TextInput style={styles.searchInput} placeholder="Pilih Tanggal (YYYY-MM-DD)" placeholderTextColor="#888" value={dateFilter} onChangeText={setDateFilter} />
@@ -269,16 +247,6 @@ export default function HistoryPage({ navigation }) {
                            <Text style={styles.historyId}>{item.transaction_id}</Text>
                            <Text style={[styles.historyStatus, { backgroundColor: getStatusColor(item.status) }]}>{statusMapping[item.status] || item.status}</Text>
                         </View>
-                        {/* <View style={styles.historyBooksWrap}>
-                           {item.compact.map((data, idx) => (
-                              <View key={idx} style={styles.historyBookRow}>
-                                 <Text style={styles.historyBookTitle} numberOfLines={1}>
-                                    Buku: {data.book.title}
-                                 </Text>
-                                 {idx === 0 && item.compact.length > 1 && <Text style={styles.historyBookOther}>(+{item.compact.length - 1} Buku Lainnya)</Text>}
-                              </View>
-                           ))}
-                        </View> */}
                         <View style={styles.historyBooksWrap}>
                            {historyData[0].compact.map((data, idx) => (
                               <View key={idx} style={styles.historyBookRow}>
@@ -304,7 +272,6 @@ export default function HistoryPage({ navigation }) {
                </View>
             )}
          </ScrollView>
-         {/* Detail Modal */}
          <Modal
             visible={!!selectedItem}
             transparent
@@ -363,7 +330,6 @@ export default function HistoryPage({ navigation }) {
                               style={{
                                  alignItems: "center",
                                  justifyContent: "center",
-                                 // flex: 1,
                                  minHeight: 240,
                                  backgroundColor: "#fff",
                               }}
@@ -396,7 +362,6 @@ const styles = StyleSheet.create({
    },
    headerContainer: {
       padding: 16,
-      // gap: 16,
    },
    headerTitle: {
       fontSize: 24,

@@ -15,7 +15,6 @@ export default function App() {
                setIsLoggedIn(true);
             }
          } catch (e) {
-            // ignore
          }
          setLoading(false);
       };

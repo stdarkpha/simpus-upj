@@ -6,18 +6,18 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import Config from "../config";
 
 export default function BookDetailModal({ visible, onClose, item, loading, setLoading }) {
-   // Use state for available state
+   // State untuk status ketersediaan
    const [isAvailable, setIsAvailable] = React.useState(false);
-   // Local loading state for add to cart
+   // State loading lokal untuk tambah ke tas
    const [addCartLoading, setAddCartLoading] = React.useState(false);
 
-   // Reset isAvailable and addCartLoading when item changes
+   // Reset isAvailable dan addCartLoading ketika item berubah
    React.useEffect(() => {
       setIsAvailable(false);
       setAddCartLoading(false);
    }, [item?.id]);
 
-   // Format date to Indonesian locale
+   // Format tanggal ke format Indonesia
    const formatDate = (dateStr) => {
       if (!dateStr) return "-";
       const date = new Date(dateStr);
@@ -28,7 +28,7 @@ export default function BookDetailModal({ visible, onClose, item, loading, setLo
       });
    };
 
-   // Adjusted addToCart handler
+   // Handler untuk tambah ke tas yang sudah disesuaikan
    const handleAddToCart = React.useCallback(async () => {
       if (loading || isAvailable || addCartLoading) return;
       if (!item?.id) return;
@@ -73,18 +73,13 @@ export default function BookDetailModal({ visible, onClose, item, loading, setLo
    return (
       <Modal visible={visible} onRequestClose={onClose} animationType="slide" transparent>
          <View style={styles.overlay}>
-            {/* Top Navbar */}
             {item ? (
                <>
                   <View style={styles.topBar}>
                      <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
                         <AntDesign name="arrowleft" size={24} color="black" />
                      </TouchableOpacity>
-                     {/* <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
-                        <Text style={styles.iconText}>🔖</Text>
-                     </TouchableOpacity> */}
                   </View>
-                  {/* Main Content */}
                   <ScrollView contentContainerStyle={styles.scrollContent}>
                      <View style={styles.imageSection}>
                         <Image source={{ uri: item.img }} style={styles.bookImage} resizeMode="cover" />
@@ -116,7 +111,6 @@ export default function BookDetailModal({ visible, onClose, item, loading, setLo
                         <Text style={styles.descText}>{item.description ? item.description.replace(/<[^>]+>/g, "") : "Tidak Ada Deskripsi"}</Text>
                      </View>
                   </ScrollView>
-                  {/* Bottom Action */}
                   <View style={styles.bottomBar}>
                      {!isAvailable && item.stock ? (
                         <TouchableOpacity style={styles.addToCartBtn} onPress={handleAddToCart} disabled={loading || isAvailable || addCartLoading} activeOpacity={0.8}>
@@ -145,7 +139,7 @@ const styles = StyleSheet.create({
       position: "relative",
       width: "100%",
       backgroundColor: "#fff",
-      height: windowHeight, // Ensure overlay fills the screen
+      height: windowHeight,
    },
    topBar: {
       position: "absolute",
@@ -156,7 +150,6 @@ const styles = StyleSheet.create({
       paddingTop: 16,
       paddingHorizontal: 16,
       paddingBottom: 8,
-      //   backgroundColor: "rgba(220,38,38,0.85)",
       zIndex: 10,
    },
    iconBtn: {
@@ -182,8 +175,6 @@ const styles = StyleSheet.create({
    imageSection: {
       width: "100%",
       alignItems: "center",
-      //   marginTop: 16,
-      //   marginBottom: 8,
       position: "relative",
       minHeight: 360,
       justifyContent: "center",

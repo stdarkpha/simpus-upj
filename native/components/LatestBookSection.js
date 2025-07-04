@@ -3,7 +3,6 @@ import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Style
 import BookDetailModal from "./BookDetailModal";
 import Config from "../config";
 
-// Memoized item component to avoid re-renders
 const BookItem = memo(({ item, onPress }) => (
    <TouchableOpacity style={styles.latestItem} activeOpacity={0.8} onPress={() => onPress(item)}>
       <View style={styles.latestImageWrapper}>
@@ -11,7 +10,6 @@ const BookItem = memo(({ item, onPress }) => (
             source={{ uri: item.img }}
             style={styles.latestImage}
             resizeMode="cover"
-            // defaultSource={require("../assets/placeholder.jpg")} // Use local placeholder image
          />
       </View>
       <Text style={styles.latestTitle} numberOfLines={1}>
@@ -101,7 +99,7 @@ const styles = StyleSheet.create({
       width: "100%",
       height: "100%",
       borderRadius: 8,
-      transform: [{ scale: 1.01 }], // helps with smoother rendering
+      transform: [{ scale: 1.01 }],
    },
    latestTitle: {
       fontWeight: "bold",

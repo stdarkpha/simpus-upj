@@ -17,7 +17,6 @@ export default function BagPage({ navigation }) {
    const [customDuration, setCustomDuration] = useState("");
    const [lendLoading, setLendLoading] = useState(false);
 
-   // Fetch cart data
    const fetchCart = async () => {
       setLoading(true);
       try {
@@ -46,7 +45,6 @@ export default function BagPage({ navigation }) {
       if (isFocused) fetchCart();
    }, [isFocused]);
 
-   // Delete single item
    const deleteItem = async (id) => {
       Alert.alert("Konfirmasi", "Apakah Anda yakin ingin menghapus buku ini dari tas?", [
          { text: "Batal", style: "cancel" },
@@ -74,7 +72,6 @@ export default function BagPage({ navigation }) {
       ]);
    };
 
-   // Clear cart
    const clearCart = async () => {
       Alert.alert("Konfirmasi", "Apakah Anda yakin ingin menghapus semua buku dari tas?", [
          { text: "Batal", style: "cancel" },
@@ -103,7 +100,6 @@ export default function BagPage({ navigation }) {
       ]);
    };
 
-   // Confirm lend
    const confirmLend = async () => {
       if (!duration && !customDuration) {
          Alert.alert("Pilih Durasi", "Silakan pilih durasi peminjaman.");
@@ -132,7 +128,6 @@ export default function BagPage({ navigation }) {
       setLendLoading(false);
    };
 
-   // Render
    return (
       <View style={{ flex: 1, backgroundColor: "#fff", position: "relative" }}>
          <ScrollView contentContainerStyle={{ paddingBottom: 140, paddingHorizontal: 16 }}>
@@ -176,7 +171,6 @@ export default function BagPage({ navigation }) {
                </View>
             )}
          </ScrollView>
-         {/* Bottom Actions */}
          {cartData.length > 0 && (
             <View style={styles.bottomActions}>
                <TouchableOpacity style={styles.clearBtn} onPress={clearCart}>
@@ -189,7 +183,6 @@ export default function BagPage({ navigation }) {
                </TouchableOpacity>
             </View>
          )}
-         {/* Lend Modal */}
          <Modal visible={isLend} transparent animationType="fade" onRequestClose={() => setIsLend(false)}>
             <View style={styles.modalOverlay}>
                <View style={styles.modalContent}>
@@ -216,7 +209,6 @@ export default function BagPage({ navigation }) {
                         keyboardType="numeric"
                         value={customDuration}
                         onChangeText={(val) => {
-                           // Only allow numbers 1-14
                            let num = val.replace(/[^0-9]/g, "");
                            if (num) num = Math.max(1, Math.min(14, Number(num))).toString();
                            setCustomDuration(num);
@@ -286,7 +278,6 @@ const styles = StyleSheet.create({
       borderRadius: 999,
       paddingVertical: 6,
       paddingHorizontal: 16,
-      // marginLeft: 8,
       marginLeft: "auto",
       marginBottom: 4,
    },
@@ -394,7 +385,6 @@ const styles = StyleSheet.create({
       backgroundColor: "#fff",
    },
    customDurationInput: {
-      // width: "100%",
       flexGrow: 1,
       fontSize: 16,
       paddingVertical: 8,

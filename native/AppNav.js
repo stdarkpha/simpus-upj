@@ -6,7 +6,6 @@ import { View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TransitionPresets } from "@react-navigation/stack";
 
-// Import your page components
 import LoginScreen from "./pages/LoginScreen";
 import Dashboard from "./pages/Dashboard";
 import BookPage from "./pages/BookPage";
@@ -21,9 +20,6 @@ const Tab = createBottomTabNavigator();
 const AuthStack = createStackNavigator();
 const AppStack = createStackNavigator();
 
-/**
- * A Higher-Order Component to wrap screens with the UserLayout.
- */
 function withLayout(Component) {
    return function WrappedComponent(props) {
       return (
@@ -34,16 +30,12 @@ function withLayout(Component) {
    };
 }
 
-/**
- * The main tab navigator for when the user is logged in.
- * It receives `setIsLoggedIn` to pass it down to the SettingPage.
- */
 function MainTabs({ setIsLoggedIn }) {
    return (
       <Tab.Navigator
          screenOptions={{
             headerShown: false,
-            tabBarStyle: { display: "none" }, // Hides the bottom tab bar
+            tabBarStyle: { display: "none" },
          }}
       >
          <Tab.Screen name="Dashboard" component={withLayout(Dashboard)} />
@@ -55,10 +47,6 @@ function MainTabs({ setIsLoggedIn }) {
    );
 }
 
-/**
- * The stack navigator for the main application screens.
- * It receives `setIsLoggedIn` to pass it to the MainTabs navigator.
- */
 function AppNavigator({ setIsLoggedIn }) {
    return (
       <AppStack.Navigator screenOptions={{ headerShown: false }}>
@@ -67,10 +55,6 @@ function AppNavigator({ setIsLoggedIn }) {
    );
 }
 
-/**
- * The stack navigator for authentication screens (e.g., Login).
- * It receives `onLogin` to update the state upon successful login.
- */
 function AuthNavigator({ onLogin }) {
    return (
       <AuthStack.Navigator screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }}>
@@ -80,15 +64,10 @@ function AuthNavigator({ onLogin }) {
    );
 }
 
-/**
- * The root component that manages the navigation state of the entire application.
- * It conditionally renders the appropriate navigator based on the `isLoggedIn` state.
- */
 export default function AppNav() {
    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
    const [loading, setLoading] = React.useState(true);
 
-   // Check for a user session in AsyncStorage when the app loads
    React.useEffect(() => {
       const checkSession = async () => {
          try {
@@ -105,7 +84,6 @@ export default function AppNav() {
       checkSession();
    }, []);
 
-   // Show a loading indicator while checking the session
    if (loading) {
       return (
          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -114,6 +92,5 @@ export default function AppNav() {
       );
    }
 
-   // Render the appropriate navigator based on the login state
    return <NavigationContainer>{isLoggedIn ? <AppNavigator setIsLoggedIn={setIsLoggedIn} /> : <AuthNavigator onLogin={() => setIsLoggedIn(true)} />}</NavigationContainer>;
 }

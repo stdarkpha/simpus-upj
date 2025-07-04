@@ -26,7 +26,6 @@ export default function LendingBook({ navigation }) {
                },
             });
             const data = await response.json();
-            //  console.log(data)
             setLendingData(data?.data || []);
          } catch (e) {
             setLendingData([]);
@@ -36,7 +35,7 @@ export default function LendingBook({ navigation }) {
       fetchLendingData();
    }, []);
 
-   // Calculate time left
+   // Hitung sisa waktu
    const countTime = (date) => {
       const now = new Date();
       const endDate = new Date(date);
@@ -48,7 +47,7 @@ export default function LendingBook({ navigation }) {
       return `${hoursLeft} jam`;
    };
 
-   // Calculate percentage
+   // Hitung persentase
    const countPercentage = (lend_date, return_date) => {
       if (!lend_date || !return_date) return 0;
 
@@ -69,7 +68,7 @@ export default function LendingBook({ navigation }) {
       return remainingPercent.toFixed(2) || 0;
    };
 
-   // Return null if no lending items
+   // Return null jika tidak ada item pinjaman
    if (!loading && (!lendingData.items || lendingData.items.length === 0)) {
       return null;
    }
@@ -122,7 +121,6 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      // paddingHorizontal: 16,
       marginBottom: 8,
    },
    title: {
@@ -135,9 +133,7 @@ const styles = StyleSheet.create({
    },
    slide: {
       width: width * 0.7,
-      //   minHeight: 180,
       borderRadius: 12,
-      // marginRight: 20,
       padding: 12,
       flexDirection: "row",
       alignItems: "flex-end",

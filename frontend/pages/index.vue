@@ -717,11 +717,14 @@
                <div class="max-w-md">
                   <h4 class="text-lg font-semibold mb-6 text-white">Alamat</h4>
                   <p class="text-gray-400 mb-4">
-                     Jl. Raya Jatiuwung No.KM. 1, Jatiuwung, Kec. Jatiuwung, Kota Tangerang, Banten 15135
+                     Blok B7/P, Jl. Cendrawasih Raya Bintaro Jaya, Sawah Baru, Kec. Ciputat, Kota Tangerang Selatan,
+                     Banten 15413
                   </p>
+
                   <iframe
-                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126632.123456789!2d106.123456789!3d-6.123456789!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e699b123456789%3A0x123456789abcdef0!2sUniversitas%20Pembangunan%20Jaya!5e0!3m2!1sen!2sid!4v1612345678900"
-                     width="100%" height="200" style="border:0;" loading="lazy"></iframe>
+                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4771.330652824697!2d106.72287607499092!3d-6.292430293696598!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f007dedc7de1%3A0x70288cde58f42a97!2sPembangunan%20Jaya%20University!5e1!3m2!1sen!2sid!4v1751615142729!5m2!1sen!2sid"
+                     width="100%" height="450" style="border:0;" loading="lazy"
+                     referrerpolicy="no-referrer-when-downgrade"></iframe>
                </div>
 
                <!-- Quick Links -->
@@ -796,10 +799,14 @@
 
 <script lang="ts" setup>
 import { Icon } from "@iconify/vue";
+const colorMode = useColorMode();
+colorMode.preference = "light";
 
 definePageMeta({
    layout: false // Use no layout for landing page
 });
+
+
 
 useSeoMeta({
    title: 'SIMPUS - Sistem Informasi Perpustakaan UPJ',
