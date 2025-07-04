@@ -13,6 +13,37 @@ export default defineNuxtConfig({
     }
   },
 
+  // SEO Configuration
+  app: {
+    head: {
+      title: 'SIMPUS - Sistem Informasi Perpustakaan UPJ',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'description', content: 'Platform modern untuk mengelola peminjaman buku dengan teknologi terdepan. Akses mudah, cepat, dan aman untuk seluruh civitas akademika Universitas Pembangunan Jaya.' },
+        { name: 'keywords', content: 'perpustakaan digital, UPJ, sistem informasi perpustakaan, peminjaman buku online, library management system, universitas pembangunan jaya' },
+        { name: 'author', content: 'Universitas Pembangunan Jaya' },
+        { name: 'robots', content: 'index, follow' },
+        { name: 'theme-color', content: '#dc2626' },
+        // Open Graph
+        { property: 'og:title', content: 'SIMPUS - Sistem Informasi Perpustakaan UPJ' },
+        { property: 'og:description', content: 'Platform modern untuk mengelola peminjaman buku dengan teknologi terdepan. Akses mudah, cepat, dan aman untuk seluruh civitas akademika UPJ.' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'SIMPUS' },
+        { property: 'og:locale', content: 'id_ID' },
+        // Twitter Card
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: 'SIMPUS - Sistem Informasi Perpustakaan UPJ' },
+        { name: 'twitter:description', content: 'Platform modern untuk mengelola peminjaman buku dengan teknologi terdepan.' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/logo.png' },
+        { rel: 'apple-touch-icon', href: '/logo.png' },
+        { rel: 'canonical', href: process.env.BASE_URL }
+      ]
+    }
+  },
+
   devtools: { enabled: true },
   ssr: false,
   css: ['~/assets/css/main.css'],

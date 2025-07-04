@@ -1,33 +1,41 @@
 <template>
    <div class="flex w-full">
       <div class="grow shrink rounded-2xl overflow-hidden relative">
-         <motion.div :animate="{ opacity: [1, 0.3, 1] }" :transition="{ repeat: Infinity, duration: 1 }" class="absolute w-1/3 aspect-square top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-            <div class="w-8 z-50 m-4 aspect-square absolute rounded-tl-lg top-0 left-0 border-t-4 border-l-4 border-white" />
-            <div class="w-8 z-50 m-4 aspect-square absolute rounded-tr-lg top-0 right-0 border-t-4 border-r-4 border-white" />
-            <div class="w-8 z-50 m-4 aspect-square absolute rounded-bl-lg bottom-0 left-0 border-b-4 border-l-4 border-white" />
-            <div class="w-8 z-50 m-4 aspect-square absolute rounded-br-lg bottom-0 right-0 border-b-4 border-r-4 border-white" />
+         <motion.div :animate="{ opacity: [1, 0.3, 1] }" :transition="{ repeat: Infinity, duration: 1 }"
+            class="absolute w-1/3 aspect-square top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+            <div
+               class="w-8 z-50 m-4 aspect-square absolute rounded-tl-lg top-0 left-0 border-t-4 border-l-4 border-white" />
+            <div
+               class="w-8 z-50 m-4 aspect-square absolute rounded-tr-lg top-0 right-0 border-t-4 border-r-4 border-white" />
+            <div
+               class="w-8 z-50 m-4 aspect-square absolute rounded-bl-lg bottom-0 left-0 border-b-4 border-l-4 border-white" />
+            <div
+               class="w-8 z-50 m-4 aspect-square absolute rounded-br-lg bottom-0 right-0 border-b-4 border-r-4 border-white" />
          </motion.div>
 
-         <motion.div class="absolute text-xl font-medium top-1/3 -translate-y-16 left-1/2 -translate-x-1/2 z-10 text-white overflow-hidden">Scan QR Code Mu Disini</motion.div>
+         <motion.div
+            class="absolute text-xl font-medium top-1/3 -translate-y-16 left-1/2 -translate-x-1/2 z-10 text-white overflow-hidden">
+            Scan QR Code Mu Disini</motion.div>
          <qrcode-stream :track="paintOutline" :formats="['qr_code']" @detect="onDetect" />
       </div>
       <div class="shrink-0 max-w-md w-full h-[calc(85vh-200px)]">
          <div class="flex pl-8 items-center justify-between mb-2">
             <h1 class="text-xl font-bold">Daftar Request</h1>
-            <button class="bg-primary text-sm text-white px-4 py-2 rounded-lg shadow hover:bg-primary/90 transition-colors" @click="scanned = []">Clear</button>
+            <button
+               class="bg-primary text-white dark:text-black text-sm px-4 py-2 rounded-lg shadow hover:bg-primary/90 transition-colors"
+               @click="scanned = []">Clear</button>
          </div>
          <div class="flex flex-col-reverse gap-4 h-auto max-h-full p-6 overflow-y-auto scrollbar-thin">
-            <div v-if="scanned.length > 0" v-for="item in scanned" class="p-4 pt-0 bg-background rounded-lg shadow-lg shadow-gray-400/10">
+            <div v-if="scanned.length > 0" v-for="item in scanned" class="p-4 bg-background rounded-lg shadow-lg shadow-gray-400/10
+               dark:border dark:border-gray-700/50
+               ">
                <div class="flex items-center justify-between mb-2">
                   <div class="font-semibold uppercase">{{ item.transaction_id }}</div>
-                  <div
-                     :class="{
-                        'bg-orange-600 text-orange-100': item.status_request == 'pending',
-                        'bg-green-600 text-green-100': item.status_request == 'approve',
-                        'bg-red-600 text-red-100': item.status_request == 'reject',
-                     }"
-                     class="text-xs capitalize px-2 py-1.5 rounded"
-                  >
+                  <div :class="{
+                     'bg-orange-600 text-orange-100': item.status_request == 'pending',
+                     'bg-green-600 text-green-100': item.status_request == 'approve',
+                     'bg-red-600 text-red-100': item.status_request == 'reject',
+                  }" class="text-xs capitalize px-2 py-1.5 rounded">
                      {{ item.status_request }}
                   </div>
                </div>
@@ -35,7 +43,7 @@
                <div class="flex items-center justify-between mb-2">
                   <div class="text-sm capitalize w-full">
                      {{ item.status == "pending" ? "Peminjaman" : "Pengembalian" }}
-                     <div class="p-2 bg-gray-200 font-medium w-full block rounded-md mt-1">
+                     <div class="p-2 bg-secondary font-medium w-full block rounded-md mt-1">
                         {{
                            new Date(item.lend_date).toLocaleDateString("id-ID", {
                               weekday: "long",
@@ -57,19 +65,20 @@
                   </div>
                </div>
                <div class="flex items-center justify-between">
-                  <div class="text-sm capitalize">
-                     <span class="block">Nama </span>
+                  <div class="text-sm capitalize mr-auto">
+                     <span :class="item.user_details.uid ? 'block' : ''">Nama: </span>
                      {{ item.user_details.name }}
                   </div>
-                  <div class="text-sm capitalize text-right">
+                  <div v-if="item.user_details.uid" class="text-sm capitalize text-right">
                      <span class="block">{{ item.user_details.role == "mahasiswa" ? "NIM" : "NIDN" }}</span>
                      {{ item.user_details.uid }}
                   </div>
                </div>
             </div>
 
-            <div v-else class="text-center text-gray-500 bg-gray-50 py-8 rounded-md flex items-center flex-col">
-               <Icon icon="mdi:barcode-scan" class="text-6xl text-gray-300 mb-4" />
+            <div v-else
+               class="text-center text-primary bg-secondary dark:bg-primary-foreground py-8 rounded-md flex items-center flex-col">
+               <Icon icon="mdi:barcode-scan" class="text-6xl text-primary dark:text- mb-4" />
                <h2 class="text-sm font-semibold mb-2">Belum ada kode yang dipindai</h2>
             </div>
          </div>
@@ -172,6 +181,6 @@ function paintOutline(detectedCodes: any, ctx: any) {
 
 <style scoped>
 .scrollbar-thin {
-   scrollbar-width: thin;
+   scrollbar-width: unset;
 }
 </style>

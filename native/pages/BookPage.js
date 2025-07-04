@@ -118,7 +118,7 @@ export default function BookPage({ navigation }) {
    );
 
    return (
-      <View style={{ flex: 1, backgroundColor: "#fff", position: "relative", zIndex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: "#fff", position: "relative", zIndex: 1, marginBottom: 64 }}>
          <View style={styles.headerBg} />
          <View style={styles.headerContainer}>
             <Text style={styles.headerTitle}>Buku Perpustakaan</Text>
@@ -194,7 +194,7 @@ export default function BookPage({ navigation }) {
                data={latestBooks}
                keyExtractor={(item) => item.id.toString()}
                numColumns={3}
-               contentContainerStyle={{ paddingHorizontal: 12 }}
+               contentContainerStyle={{ paddingHorizontal: 16 }}
                renderItem={renderBookItem}
                ListFooterComponent={
                   isFetchingMore && (

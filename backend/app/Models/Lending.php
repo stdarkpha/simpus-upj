@@ -14,6 +14,11 @@ class Lending extends Model
         'status',
     ];
 
+    protected $casts = [
+        'lend_date' => 'datetime',
+        'return_date' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

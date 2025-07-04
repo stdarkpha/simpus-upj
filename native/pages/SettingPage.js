@@ -39,6 +39,45 @@ export default function SettingPage({ navigation, setIsLoggedIn }) {
    const [userRole, setUserRole] = React.useState("");
    const [userUid, setUserUid] = React.useState("");
    const [userEmail, setUserEmail] = React.useState("");
+   const [lendingStats, setLendingStats] = React.useState({
+      total: 0,
+      onTime: 0,
+      late: 0,
+   });
+   const [isLoadingStats, setIsLoadingStats] = React.useState(true);
+
+   const fetchLendingStats = async () => {
+      try {
+         const userStr = await AsyncStorage.getItem("user");
+         const user = userStr ? JSON.parse(userStr) : null;
+         const token = user?.data?.token;
+
+         if (token) {
+            const response = await fetch(`${Config.API_URL}/lending/stats`, {
+               method: "GET",
+               headers: {
+                  Authorization: `Bearer ${token}`,
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+               },
+            });
+
+            const data = await response.json();
+            console.log("Lending Stats Response:", data);
+            if (data.success && data.data) {
+               setLendingStats({
+                  total: data.data.total_lendings || 0,
+                  onTime: data.data.on_time_returns || 0,
+                  late: data.data.currently_overdue || 0,
+               });
+            }
+         }
+      } catch (error) {
+         console.error("Failed to fetch lending stats:", error);
+      } finally {
+         setIsLoadingStats(false);
+      }
+   };
 
    React.useEffect(() => {
       AsyncStorage.getItem("user").then((value) => {
@@ -54,6 +93,9 @@ export default function SettingPage({ navigation, setIsLoggedIn }) {
             } catch (e) {}
          }
       });
+
+      // Fetch lending statistics
+      fetchLendingStats();
    }, []);
 
    return (
@@ -63,7 +105,8 @@ export default function SettingPage({ navigation, setIsLoggedIn }) {
             <View style={styles.header}>
                <Text style={styles.headerTitle}>{userName}</Text>
                <Text style={styles.headerSubtitle}>
-                  <Text style={{ textTransform: "capitalize" }}>{userRole}</Text> | NIM: {userUid} | {userEmail}
+                  <Text style={{ textTransform: "capitalize" }}>{userRole} </Text>
+                  {userUid && ` | NIM: ${userUid}`}| {userEmail}
                </Text>
             </View>
 
@@ -71,18 +114,17 @@ export default function SettingPage({ navigation, setIsLoggedIn }) {
                <Text style={styles.cardTitle}>Total Peminjaman</Text>
                <View style={styles.chartRow}>
                   <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                     <Text style={styles.chartTotal}>100</Text>
-
+                     <Text style={styles.chartTotal}>{isLoadingStats ? "..." : lendingStats.total}</Text>
                      <Text style={styles.statLabel}>Total</Text>
                   </View>
                   <View style={styles.divider} />
                   <View style={{ flex: 1, alignItems: "center" }}>
-                     <Text style={styles.statNumber}>75</Text>
+                     <Text style={styles.statNumber}>{isLoadingStats ? "..." : lendingStats.onTime}</Text>
                      <Text style={styles.statLabel}>Tepat Waktu</Text>
                   </View>
                   <View style={styles.divider} />
                   <View style={{ flex: 1, alignItems: "center" }}>
-                     <Text style={styles.statNumber}>25</Text>
+                     <Text style={styles.statNumber}>{isLoadingStats ? "..." : lendingStats.late}</Text>
                      <Text style={styles.statLabel}>Terlambat</Text>
                   </View>
                </View>

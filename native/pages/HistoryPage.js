@@ -12,6 +12,7 @@ const statusMapping = {
    claim: "Sudah Diambil",
    returned: "Dikembalikan",
    overdue: "Terlambat",
+   returned_late: "Pengembalian Terlambat",
 };
 
 function formatDate(dateString) {
@@ -36,6 +37,8 @@ function getStatusColor(status) {
          return "#ea580c"; // orange-600
       case "reject":
          return "#dc2626"; // red-600
+      case "returned_late":
+         return "#E7000B"; // gray-600
       default:
          return "#4b5563"; // gray-600
    }

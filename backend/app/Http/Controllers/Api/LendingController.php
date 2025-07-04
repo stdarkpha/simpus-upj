@@ -248,7 +248,7 @@ class LendingController extends Controller
             $notification = Notification::create([
                 'user_id' => $user_id,
                 'type' => 'success',
-                'title' => 'Lending Berhasil',
+                'title' => 'Peminjaman Berhasil',
                 'message' => 'Peminjaman buku berhasil. Silakan datang ke perpustakaan untuk verifikasi.',
                 'data' => [
                     'lending_id' => $lending->id,
@@ -479,7 +479,7 @@ class LendingController extends Controller
                 ], 404);
             }
 
-            if ($lending->status === 'returned') {
+            if ($lending->status === 'returned' || $lending->status === 'returned_late') {
                 return response()->json([
                     'success' => true,
                     'message' => 'Lending has already been returned.',
@@ -562,7 +562,7 @@ class LendingController extends Controller
                     $message = 'Lending has been approved.';
                     break;
                 case 'overdue':
-                    $lending->status = 'returned';
+                    $lending->status = 'returned_late';
                     $message = 'Lending has been returned with overdue status.';
                     break;
                 default:
@@ -590,11 +590,11 @@ class LendingController extends Controller
                     'timestamp' => now(),
                     'is_read' => false
                 ]);
-            } elseif ($lending->status === 'returned') {
+            } elseif ($lending->status === 'returned' || $lending->status === 'returned_late') {
                 // Return notification
-                $notificationType = $originalStatus === 'overdue' ? 'warning' : 'info';
-                $notificationTitle = $originalStatus === 'overdue' ? 'Pengembalian Terlambat' : 'Buku Dikembalikan';
-                $notificationMessage = $originalStatus === 'overdue'
+                $notificationType = $lending->status === 'returned_late' ? 'warning' : 'info';
+                $notificationTitle = $lending->status === 'returned_late' ? 'Pengembalian Terlambat' : 'Buku Dikembalikan';
+                $notificationMessage = $lending->status === 'returned_late'
                     ? 'Buku telah dikembalikan dengan status terlambat.'
                     : 'Buku telah berhasil dikembalikan.';
 
@@ -606,8 +606,8 @@ class LendingController extends Controller
                     'data' => [
                         'lending_id' => $lending->id,
                         'transaction_id' => $lending->transaction_id,
-                        'action' => $originalStatus === 'overdue' ? 'returned_overdue' : 'returned',
-                        'status' => 'returned'
+                        'action' => $lending->status === 'returned_late' ? 'returned_overdue' : 'returned',
+                        'status' => $lending->status
                     ],
                     'timestamp' => now(),
                     'is_read' => false
@@ -664,7 +664,7 @@ class LendingController extends Controller
                 }
             }
 
-            if ($lending->status == 'returned') {
+            if ($lending->status == 'returned' || $lending->status == 'returned_late') {
                 // Increase book stock for each item in the lending
                 foreach ($lending->item as $item) {
                     $book = Books::find($item->book_id);
@@ -699,6 +699,453 @@ class LendingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while processing the claim.',
+            ], 500);
+        }
+    }
+
+    // Function to update lending status to overdue for cron job
+    public function updateOverdueLendings()
+    {
+        try {
+            // Get all lending records where:
+            // 1. return_date is past today
+            // 2. status is 'claim' (currently borrowed)
+            $today = now()->startOfDay();
+
+            $overdueLendings = Lending::with(['user'])
+                ->where('return_date', '<', $today)
+                ->where('status', 'claim')
+                ->get();
+
+            if ($overdueLendings->isEmpty()) {
+                Log::info('No overdue lendings found during cron check');
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No overdue lendings found.',
+                    'updated_count' => 0
+                ]);
+            }
+
+            $updatedCount = 0;
+            $notifications = [];
+
+            DB::beginTransaction();
+
+            foreach ($overdueLendings as $lending) {
+                // Update status to overdue
+                $lending->status = 'overdue';
+                $lending->save();
+                $updatedCount++;
+
+                // Create notification for overdue lending
+                $daysOverdue = now()->diffInDays($lending->return_date);
+
+                $notification = Notification::create([
+                    'user_id' => $lending->user_id,
+                    'type' => 'warning',
+                    'title' => 'Peminjaman Terlambat',
+                    'message' => "Peminjaman buku Anda telah terlambat {$daysOverdue} hari. Segera kembalikan ke perpustakaan.",
+                    'data' => [
+                        'lending_id' => $lending->id,
+                        'transaction_id' => $lending->transaction_id,
+                        'return_date' => $lending->return_date->format('Y-m-d'),
+                        'days_overdue' => $daysOverdue,
+                        'action' => 'overdue'
+                    ],
+                    'timestamp' => now(),
+                    'is_read' => false
+                ]);
+
+                $notifications[] = $notification;
+
+                Log::info('Lending marked as overdue', [
+                    'lending_id' => $lending->id,
+                    'user_id' => $lending->user_id,
+                    'transaction_id' => $lending->transaction_id,
+                    'return_date' => $lending->return_date->format('Y-m-d'),
+                    'days_overdue' => $daysOverdue
+                ]);
+            }
+
+            DB::commit();
+
+            // Send real-time notifications via Pusher
+            foreach ($notifications as $notification) {
+                $pusherData = [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->title,
+                    'message' => $notification->message,
+                    'data' => $notification->data,
+                    'timestamp' => $notification->timestamp->toISOString(),
+                    'is_read' => false
+                ];
+
+                try {
+                    $pusher = new Pusher(
+                        env('PUSHER_APP_KEY'),
+                        env('PUSHER_APP_SECRET'),
+                        env('PUSHER_APP_ID'),
+                        [
+                            'cluster' => env('PUSHER_APP_CLUSTER'),
+                            'useTLS' => true,
+                        ]
+                    );
+
+                    $channel = "user.{$notification->user_id}";
+                    $event = 'notification.created';
+
+                    $result = $pusher->trigger($channel, $event, $pusherData);
+
+                    Log::info('Pusher overdue notification sent successfully', [
+                        'user_id' => $notification->user_id,
+                        'notification_id' => $notification->id,
+                        'channel' => $channel
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send Pusher overdue notification', [
+                        'user_id' => $notification->user_id,
+                        'notification_id' => $notification->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            Log::info('Overdue lendings cron job completed', [
+                'updated_count' => $updatedCount,
+                'notifications_sent' => count($notifications)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully updated {$updatedCount} lending(s) to overdue status.",
+                'updated_count' => $updatedCount,
+                'notifications_sent' => count($notifications)
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error in updateOverdueLendings cron job', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating overdue lendings.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Get user lending statistics
+    public function getUserLendingStats(Request $request)
+    {
+        $user_id = $request->user()->id;
+
+        if (!$user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
+
+        try {
+            // Get all lending records for the user
+            $totalLendings = Lending::where('user_id', $user_id)->count();
+
+            // Get on-time returns (returned status)
+            $onTimeLendings = Lending::where('user_id', $user_id)
+                ->where('status', 'returned')
+                ->count();
+
+            // Get late returns (returned_late status)
+            $lateLendings = Lending::where('user_id', $user_id)
+                ->where('status', 'returned_late')
+                ->count();
+
+            // Get currently overdue
+            $currentlyOverdue = Lending::where('user_id', $user_id)
+                ->where('status', 'overdue')
+                ->count();
+
+            // Get pending lendings
+            $pendingLendings = Lending::where('user_id', $user_id)
+                ->where('status', 'pending')
+                ->count();
+
+            // Get approved/claimed lendings (currently borrowed)
+            $claimedLendings = Lending::where('user_id', $user_id)
+                ->where('status', 'claim')
+                ->count();
+
+            // Get rejected lendings
+            $rejectedLendings = Lending::where('user_id', $user_id)
+                ->where('status', 'reject')
+                ->count();
+
+            $stats = [
+                'total_lendings' => $totalLendings,
+                'on_time_returns' => $onTimeLendings,
+                'late_returns' => $lateLendings,
+                'currently_overdue' => $currentlyOverdue,
+                'pending_approval' => $pendingLendings,
+                'currently_borrowed' => $claimedLendings,
+                'rejected' => $rejectedLendings,
+                'completion_rate' => $totalLendings > 0 ? round((($onTimeLendings + $lateLendings) / $totalLendings) * 100, 2) : 0,
+                'on_time_rate' => ($onTimeLendings + $lateLendings) > 0 ? round(($onTimeLendings / ($onTimeLendings + $lateLendings)) * 100, 2) : 0
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats,
+                'message' => 'User lending statistics retrieved successfully.',
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error getting user lending stats', [
+                'user_id' => $user_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving lending statistics.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Get all users lending statistics (admin only)
+    public function getAllUsersLendingStats(Request $request)
+    {
+        try {
+            $this->authorize('admin');
+
+            // Get lending statistics for all users
+            $userStats = DB::table('lendings')
+                ->join('users', 'lendings.user_id', '=', 'users.id')
+                ->select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'users.uid',
+                    DB::raw('COUNT(*) as total_lendings'),
+                    DB::raw('SUM(CASE WHEN status = "returned" THEN 1 ELSE 0 END) as on_time_returns'),
+                    DB::raw('SUM(CASE WHEN status = "returned_late" THEN 1 ELSE 0 END) as late_returns'),
+                    DB::raw('SUM(CASE WHEN status = "overdue" THEN 1 ELSE 0 END) as currently_overdue'),
+                    DB::raw('SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_approval'),
+                    DB::raw('SUM(CASE WHEN status = "claim" THEN 1 ELSE 0 END) as currently_borrowed'),
+                    DB::raw('SUM(CASE WHEN status = "reject" THEN 1 ELSE 0 END) as rejected')
+                )
+                ->groupBy('users.id', 'users.name', 'users.email', 'users.uid')
+                ->get();
+
+            // Calculate rates for each user
+            $userStats = $userStats->map(function ($user) {
+                $totalCompleted = $user->on_time_returns + $user->late_returns;
+                $user->completion_rate = $user->total_lendings > 0 ? round(($totalCompleted / $user->total_lendings) * 100, 2) : 0;
+                $user->on_time_rate = $totalCompleted > 0 ? round(($user->on_time_returns / $totalCompleted) * 100, 2) : 0;
+                return $user;
+            });
+
+            // Get overall statistics
+            $overallStats = [
+                'total_users_with_lendings' => $userStats->count(),
+                'total_lendings' => $userStats->sum('total_lendings'),
+                'total_on_time_returns' => $userStats->sum('on_time_returns'),
+                'total_late_returns' => $userStats->sum('late_returns'),
+                'total_currently_overdue' => $userStats->sum('currently_overdue'),
+                'total_pending_approval' => $userStats->sum('pending_approval'),
+                'total_currently_borrowed' => $userStats->sum('currently_borrowed'),
+                'total_rejected' => $userStats->sum('rejected'),
+            ];
+
+            $totalCompleted = $overallStats['total_on_time_returns'] + $overallStats['total_late_returns'];
+            $overallStats['overall_completion_rate'] = $overallStats['total_lendings'] > 0 ?
+                round(($totalCompleted / $overallStats['total_lendings']) * 100, 2) : 0;
+            $overallStats['overall_on_time_rate'] = $totalCompleted > 0 ?
+                round(($overallStats['total_on_time_returns'] / $totalCompleted) * 100, 2) : 0;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'overall_statistics' => $overallStats,
+                    'user_statistics' => $userStats
+                ],
+                'message' => 'All users lending statistics retrieved successfully.',
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to perform this action.',
+            ], 403);
+        } catch (Exception $e) {
+            Log::error('Error getting all users lending stats', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving lending statistics.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getAllLendings(Request $request)
+    {
+        try {
+            // Check if user is admin
+            $this->authorize('admin');
+
+            // Get all lending records with relationships
+            $lendings = Lending::with([
+                'user:id,name,email,uid,role',
+                'items.book:id,title,author,img',
+                'items.book.category:id,name'
+            ])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Transform data to include image URLs
+            $lendings->transform(function ($lending) {
+                $lending->items->transform(function ($item) {
+                    if ($item->book && $item->book->img) {
+                        $item->book->img = asset('uploads/books/' . $item->book->img);
+                    }
+                    return $item;
+                });
+                return $lending;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $lendings,
+                'message' => 'All lending records retrieved successfully.',
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to perform this action.',
+            ], 403);
+        } catch (Exception $e) {
+            Log::error('Error getting all lendings', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving lending records.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Get dashboard statistics (admin only)
+    public function getDashboardStats(Request $request)
+    {
+        try {
+            $this->authorize('admin');
+
+            // Total Books
+            $totalBooks = DB::table('books')->count();
+
+            // Total Users (non-admin)
+            $totalUsers = DB::table('users')->where('role', '!=', 'admin')->count();
+
+            // Total Lendings
+            $totalLendings = Lending::count();
+
+            // Total Returns (returned + returned_late)
+            $totalReturns = Lending::whereIn('status', ['returned', 'returned_late'])->count();
+
+            // Chart data - lending stats by month for current year
+            $chartData = DB::table('lendings')
+                ->select(
+                    DB::raw("CAST(strftime('%m', created_at) AS INTEGER) as month"),
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw('SUM(CASE WHEN status = "returned" THEN 1 ELSE 0 END) as returned'),
+                    DB::raw('SUM(CASE WHEN status = "returned_late" THEN 1 ELSE 0 END) as late'),
+                    DB::raw('SUM(CASE WHEN status = "overdue" THEN 1 ELSE 0 END) as overdue')
+                )
+                ->whereYear('created_at', date('Y'))
+                ->groupBy(DB::raw("strftime('%m', created_at)"))
+                ->orderBy('month')
+                ->get();
+
+            // Most borrowed books (top 5)
+            $mostBorrowedBooks = DB::table('lending_items')
+                ->join('books', 'lending_items.book_id', '=', 'books.id')
+                ->join('categories', 'books.category_id', '=', 'categories.id')
+                ->select(
+                    'books.id',
+                    'books.title',
+                    'books.author',
+                    'books.img',
+                    'categories.name as category',
+                    DB::raw('COUNT(*) as borrow_count')
+                )
+                ->groupBy('books.id', 'books.title', 'books.author', 'books.img', 'categories.name')
+                ->orderBy('borrow_count', 'desc')
+                ->limit(5)
+                ->get();
+
+            // Transform book images
+            $mostBorrowedBooks = $mostBorrowedBooks->map(function ($book) {
+                $book->img = $book->img ? asset('uploads/books/' . $book->img) : null;
+                return $book;
+            });
+
+            // Top users with most lendings (top 5)
+            $topUsers = DB::table('lendings')
+                ->join('users', 'lendings.user_id', '=', 'users.id')
+                ->select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'users.uid',
+                    'users.role',
+                    DB::raw('COUNT(*) as lending_count'),
+                    DB::raw('SUM(CASE WHEN status = "returned" THEN 1 ELSE 0 END) as returned_count'),
+                    DB::raw('SUM(CASE WHEN status = "returned_late" THEN 1 ELSE 0 END) as late_count')
+                )
+                ->groupBy('users.id', 'users.name', 'users.email', 'users.uid', 'users.role')
+                ->orderBy('lending_count', 'desc')
+                ->limit(5)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'overview' => [
+                        'total_books' => $totalBooks,
+                        'total_users' => $totalUsers,
+                        'total_lendings' => $totalLendings,
+                        'total_returns' => $totalReturns
+                    ],
+                    'chart_data' => $chartData,
+                    'most_borrowed_books' => $mostBorrowedBooks,
+                    'top_users' => $topUsers
+                ],
+                'message' => 'Dashboard statistics retrieved successfully.',
+            ]);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to perform this action.',
+            ], 403);
+        } catch (Exception $e) {
+            Log::error('Error getting dashboard stats', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving dashboard statistics.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

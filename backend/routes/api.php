@@ -74,9 +74,23 @@ Route::middleware('auth:sanctum')->group(function () {
         // Show lending detail by ID
         Route::get('/history/{id}', [LendingController::class, 'generateQR']);
         Route::get('/history/detail/{id}', [LendingController::class, 'detail']);
-
         // claim book
         Route::post('/claim/{id}', [LendingController::class, 'claim']);
+
+        // Update overdue lendings (for cron job)
+        Route::post('/update-overdue', [LendingController::class, 'updateOverdueLendings']);
+
+        // Get user lending statistics
+        Route::get('/stats', [LendingController::class, 'getUserLendingStats']);
+
+        // Get all lending records (admin only)
+        Route::get('/all', [LendingController::class, 'getAllLendings']);
+
+        // Get dashboard statistics (admin only)
+        Route::get('/dashboard/stats', [LendingController::class, 'getDashboardStats']);
+
+        // Get all users lending statistics (admin only)
+        Route::get('/stats/all', [LendingController::class, 'getAllUsersLendingStats']);
     });
 
     // notifications

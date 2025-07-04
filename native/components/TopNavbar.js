@@ -20,6 +20,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
 
    // Animation
    const badgeScale = useRef(new Animated.Value(1)).current;
+   const panelTranslateY = useRef(new Animated.Value(300)).current; // Start off-screen
 
    useEffect(() => {
       initializeNotifications();
@@ -215,7 +216,39 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
    };
 
    const toggleNotifications = () => {
-      setShowNotifications(!showNotifications);
+      if (!showNotifications) {
+         // Reset panel to bottom position first
+         panelTranslateY.setValue(300);
+         setShowNotifications(true);
+         // Small delay to ensure modal is rendered, then animate panel sliding up
+         setTimeout(() => {
+            Animated.timing(panelTranslateY, {
+               toValue: 0,
+               duration: 400,
+               useNativeDriver: true,
+            }).start();
+         }, 50);
+      } else {
+         // Animate panel sliding down
+         Animated.timing(panelTranslateY, {
+            toValue: 500,
+            duration: 400,
+            useNativeDriver: true,
+         }).start(() => {
+            setShowNotifications(false);
+         });
+      }
+   };
+
+   const dismissModal = () => {
+      // Animate panel sliding down
+      Animated.timing(panelTranslateY, {
+         toValue: 500,
+         duration: 400,
+         useNativeDriver: true,
+      }).start(() => {
+         setShowNotifications(false);
+      });
    };
 
    const markAllAsRead = async () => {
@@ -352,13 +385,23 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
          </View>
 
          {/* Notifications Modal */}
-         <Modal visible={showNotifications} animationType="slide" transparent={true} onRequestClose={() => setShowNotifications(false)}>
+         <Modal visible={showNotifications} animationType="fade" transparent={true} onRequestClose={dismissModal}>
             <View style={styles.modalOverlay}>
-               <View style={styles.notificationsPanel}>
+               {/* Background overlay that dismisses modal when tapped */}
+               <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={dismissModal} />
+
+               <Animated.View
+                  style={[
+                     styles.notificationsPanel,
+                     {
+                        transform: [{ translateY: panelTranslateY }],
+                     },
+                  ]}
+               >
                   {/* Header */}
                   <View style={styles.modalHeader}>
                      <Text style={styles.modalTitle}>Notifications</Text>
-                     <TouchableOpacity onPress={() => setShowNotifications(false)}>
+                     <TouchableOpacity onPress={dismissModal}>
                         <MaterialIcons name="close" size={24} color="#6B7280" />
                      </TouchableOpacity>
                   </View>
@@ -383,7 +426,7 @@ export default function UserNavbar({ status = "authenticated", greetings = "Pagi
                         </TouchableOpacity>
                      </View>
                   )}
-               </View>
+               </Animated.View>
             </View>
          </Modal>
       </View>
@@ -473,6 +516,13 @@ const styles = StyleSheet.create({
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       justifyContent: "flex-end",
+   },
+   modalBackdrop: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
    },
    notificationsPanel: {
       backgroundColor: "#fff",

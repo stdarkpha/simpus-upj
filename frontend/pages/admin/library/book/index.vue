@@ -53,7 +53,7 @@
                         "
                         :id="id"
                      />
-                     <SheetDescription> </SheetDescription>
+                     <SheetDescription></SheetDescription>
                   </SheetContent>
                </Sheet>
             </div>
